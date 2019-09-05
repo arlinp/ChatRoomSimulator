@@ -1,62 +1,69 @@
 // Java implementation of Server side 
 // It contains two classes : Server and ClientHandler 
 
-import java.io.*; 
-import java.util.*; 
-import java.net.*; 
+import java.io.*;
+import java.util.*;
+import java.net.*;
 
 // Server class 
-public class Server 
-{ 
+public class Server {
 
 	// Vector to store active clients 
-	static Vector<ClientHandler> ar = new Vector<>(); 
-	
+	static Vector<ClientHandler> ar = new Vector<>();
+
 	// counter for clients 
-	static int i = 0; 
+	static int i = 0;
+	//
+	static int portNumber;
 
-	public static void main(String[] args) throws IOException 
-	{ 
-		// server is listening on port 1234 
-		ServerSocket ss = new ServerSocket(1234); 
-		
-		Socket s; 
-		
-		
-		// client request using infinite loop 
-		while (true) 
-		{ 
-			// Accept the incoming request 
-			s = ss.accept(); 
+	public static void main(String[] args) throws IOException {
+		Scanner sc = new Scanner(System.in);
+        System.out.println("Enter your port number");
+        portNumber = sc.nextInt();
+		try {
+			// server is listening on entered port number
+			ServerSocket ss = new ServerSocket(portNumber);
 
-			System.out.println("New client request received : " + s); 
-			
-			// obtain input and output streams 
-			DataInputStream dis = new DataInputStream(s.getInputStream()); 
-			DataOutputStream dos = new DataOutputStream(s.getOutputStream()); 
-			
-			System.out.println("Creating a new handler for this client..."); 
+			Socket s;
 
-			// Create a new handler object for handling this request. 
-			ClientHandler mtch = new ClientHandler(s,"client " + i, dis, dos); 
 
-			// Create a new Thread with this object. 
-			Thread t = new Thread(mtch); 
-			
-			System.out.println("Adding this client to active client list"); 
+			// client request using infinite loop
+			while (true) {
+				// Accept the incoming request
+				s = ss.accept();
 
-			// add this client to active clients list 
-			ar.add(mtch); 
+				System.out.println("New client request received : " + s);
 
-			// start the thread. 
-			t.start(); 
+				// obtain input and output streams
+				DataInputStream dis = new DataInputStream(s.getInputStream());
+				DataOutputStream dos = new DataOutputStream(s.getOutputStream());
 
-			// increment i for new client. 
-			// i is used for naming only, and can be replaced 
-			// by any naming scheme 
-			i++; 
+				System.out.println("Creating a new handler for this client...");
 
-		} 
+				// Create a new handler object for handling this request.
+				ClientHandler mtch = new ClientHandler(s, "client " + i, dis, dos);
+
+				// Create a new Thread with this object.
+				Thread t = new Thread(mtch);
+
+				System.out.println("Adding this client to active client list");
+
+				// add this client to active clients list
+				ar.add(mtch);
+
+				// start the thread.
+				t.start();
+
+				// increment i for new client.
+				// i is used for naming only, and can be replaced
+				// by any naming scheme
+				i++;
+
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	} 
 } 
 
@@ -87,7 +94,8 @@ class ClientHandler implements Runnable
 		while (true) 
 		{ 
 			try
-			{ 
+			{
+
 				// receive the string 
 				received = dis.readUTF(); 
 				
