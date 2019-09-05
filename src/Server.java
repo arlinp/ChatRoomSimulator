@@ -17,9 +17,15 @@ public class Server {
 	static int portNumber;
 
 	public static void main(String[] args) throws IOException {
-		Scanner sc = new Scanner(System.in);
-        System.out.println("Enter your port number");
-        portNumber = sc.nextInt();
+		if (args.length == 0) {
+		    portNumber = 1025;
+        } else if (Integer.parseInt(args[0]) < 1024) {
+		    portNumber = 1025;
+        } else {
+		    portNumber = Integer.parseInt(args[0]);
+        }
+        System.out.println("Port number = " + portNumber);
+
 		try {
 			// server is listening on entered port number
 			ServerSocket ss = new ServerSocket(portNumber);
