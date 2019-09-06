@@ -37,6 +37,8 @@ public class Server {
 
 			// client request using infinite loop
 			while (true) {
+			    String name = ""; // Need to add something to get client name
+
 				// Accept the incoming request
 				s = ss.accept();
 
@@ -48,28 +50,33 @@ public class Server {
 
 				System.out.println("Creating a new handler for this client...");
 
-				// Create a new handler object for handling this request.
-				ClientHandler mtch = new ClientHandler(s, "client " + i, dis, dos);
+				for (ClientHandler clientHandler : ar) {
+				    if (clientHandler.getName().equals(name)) {
+				        throw new IOException("Connection Refused");
+                    } else {
+                        // Create a new handler object for handling this request.
+                        ClientHandler mtch = new ClientHandler(s, "client " + i, dis, dos);
 
-				// Create a new Thread with this object.
-				Thread t = new Thread(mtch);
+                        // Create a new Thread with this object.
+                        Thread t = new Thread(mtch);
 
-				System.out.println("Adding this client to active client list");
+                        System.out.println("Adding this client to active client list");
 
-				// add this client to active clients list
-				ar.add(mtch);
+                        // add this client to active clients list
+                        ar.add(mtch);
 
-				// start the thread.
-				t.start();
+                        // start the thread.
+                        t.start();
 
-				// increment i for new client.
-				// i is used for naming only, and can be replaced
-				// by any naming scheme
-				i++;
-
+                        // increment i for new client.
+                        // i is used for naming only, and can be replaced
+                        // by any naming scheme
+                        i++;
+                    }
+                }
 			}
 		} catch (IOException e) { // Letting client know that the connection was Refused
-            System.out.println("Connection Refused");
+            e.printStackTrace();
 		}
 	} 
 } 
@@ -92,7 +99,11 @@ class ClientHandler implements Runnable
 		this.name = name; 
 		this.s = s; 
 		this.isloggedin=true; 
-	} 
+	}
+
+	public String getName() {
+	    return name;
+    }
 
 	@Override
 	public void run() { 
