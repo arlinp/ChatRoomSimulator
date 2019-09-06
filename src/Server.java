@@ -17,6 +17,8 @@ public class Server {
 	static int portNumber;
 
 	public static void main(String[] args) throws IOException {
+
+	    // You can't open a port below 1024, if you don't have root privileges
 		if (args.length == 0) {
 		    portNumber = 1025;
         } else if (Integer.parseInt(args[0]) < 1024) {
@@ -66,9 +68,8 @@ public class Server {
 				i++;
 
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+		} catch (IOException e) { // Letting client know that the connection was Refused
+            System.out.println("Connection Refused");
 		}
 	} 
 } 
