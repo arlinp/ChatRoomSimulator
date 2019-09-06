@@ -3,17 +3,20 @@
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 
 public class Client
 {
-    final static int ServerPort = 1234;
+    private static int ServerPort = 1025;
     private String username;
-
 
     public static void main(String args[]) throws UnknownHostException, IOException
     {
         Scanner scn = new Scanner(System.in);
-
+            /**commenting out until I figure out a way separate this from output data stream**/
+        System.out.println("Which port would you like to connect to?");
+        ServerPort = scn.nextInt();
+//
         System.out.println("Welcome to the chat server.  Please enter your username.");
         Client client = new Client(scn.next());
 
@@ -65,10 +68,8 @@ public class Client
                 }
             }
         });
-
         sendMessage.start();
         readMessage.start();
-
     }
 
     public Client (String ID){
@@ -79,7 +80,7 @@ public class Client
         return this.username;
     }
 
-    private void setUsername(String newUsername){
+    public void setUsername(String newUsername){
         this.username = newUsername;
     }
 }
