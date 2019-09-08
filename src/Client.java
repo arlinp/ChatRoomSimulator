@@ -8,17 +8,23 @@ import java.util.StringTokenizer;
 public class Client
 {
     private static int ServerPort = 1025;
-    private String username;
+    private static String username;
+	private static InetAddress ip;
 
     public static void main(String args[]) throws UnknownHostException, IOException
     {
         Scanner scn = new Scanner(System.in);
             /**commenting out until I figure out a way separate this from output data stream**/
-        System.out.println("Which port would you like to connect to?");
-        ServerPort = scn.nextInt();
+
+            ip = InetAddress.getByName(args[0]);
+            ServerPort = Integer.parseInt(args[1]);
+            username = args[2];
+
+//        System.out.println("Which port would you like to connect to?");
+//        ServerPort = scn.nextInt();
 //
-        System.out.println("Welcome to the chat server.  Please enter your username.");
-        Client client = new Client(scn.next());
+//        System.out.println("Welcome to the chat server.  Please enter your username.");
+//        username = scn.next();
 
         // getting localhost ip
         InetAddress ip = InetAddress.getByName("localhost");
@@ -43,6 +49,7 @@ public class Client
                     try {
                         // write on the output stream
                         dos.writeUTF(msg);
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -72,7 +79,7 @@ public class Client
         readMessage.start();
     }
 
-    public Client (String ID){
+    public Client(String ID){
         this.username = ID;
     }
 
