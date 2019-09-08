@@ -2,6 +2,8 @@
 
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -10,6 +12,11 @@ public class Client
     private static int ServerPort = 1025;
     private static String username;
 	private static InetAddress ip;
+    private static long timeSent;
+    private static Timestamp timeReceived;
+    private static String sendingTo;
+    private static ArrayList<String> activeUsers = new ArrayList<>();
+    private static ArrayList<String> savedMessages = new ArrayList<>();
 
     public static void main(String args[]) throws UnknownHostException, IOException
     {
@@ -20,14 +27,8 @@ public class Client
             ServerPort = Integer.parseInt(args[1]);
             username = args[2];
 
-//        System.out.println("Which port would you like to connect to?");
-//        ServerPort = scn.nextInt();
-//
-//        System.out.println("Welcome to the chat server.  Please enter your username.");
-//        username = scn.next();
-
-        // getting localhost ip
-        InetAddress ip = InetAddress.getByName("localhost");
+//         getting localhost ip
+//        InetAddress ip = InetAddress.getByName("localhost");
 
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
@@ -35,6 +36,7 @@ public class Client
         // obtaining input and out streams
         DataInputStream dis = new DataInputStream(s.getInputStream());
         DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+        dos.writeUTF("setName#" + username);
 
         // sendMessage thread
         Thread sendMessage = new Thread(new Runnable()
@@ -46,13 +48,25 @@ public class Client
                     // read the message to deliver.
                     String msg = scn.nextLine();
 
-                    try {
-                        // write on the output stream
-                        dos.writeUTF(msg);
+                    //break message apart
+                    StringTokenizer st = new StringTokenizer(msg, "#");
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    for (String user: activeUsers)
+                    {
+                        if(st.nextToken().equalsIgnoreCase(user)){
+                            try {
+                                // write on the output stream
+                                dos.writeUTF(username + sendingTo + msg + timeSent);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else{
+                            System.out.println("not allowed");
+                        }
                     }
+
                 }
             }
         });
@@ -60,6 +74,10 @@ public class Client
         // readMessage thread
         Thread readMessage = new Thread(new Runnable()
         {
+            /**when reuben sends me a message he sends
+             * sendersname#msg
+             */
+
             @Override
             public void run() {
 
@@ -67,7 +85,14 @@ public class Client
                     try {
                         // read the message sent to this client
                         String msg = dis.readUTF();
+                        StringTokenizer st = new StringTokenizer(msg, "#");
+                        String MsgToSend = st.nextToken();
+                        String recipient = st.nextToken();
+
+
+                        //print message received
                         System.out.println(msg);
+
                     } catch (IOException e) {
 
                         e.printStackTrace();
