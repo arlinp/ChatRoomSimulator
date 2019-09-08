@@ -2,6 +2,7 @@
 // It contains two classes : Server and ClientHandler 
 
 import java.io.*;
+import java.security.Timestamp;
 import java.util.*;
 import java.net.*;
 
@@ -38,9 +39,7 @@ public class Server {
 
 			// client request using infinite loop
 			while (true) {
-			    String name = "client " ; // Need to add something to get client name
-
-				// Accept the incoming request
+			    // Accept the incoming request
 				s = ss.accept();
 
 				System.out.println("New client request received : " + s);
@@ -49,14 +48,9 @@ public class Server {
 				DataInputStream dis = new DataInputStream(s.getInputStream());
 				DataOutputStream dos = new DataOutputStream(s.getOutputStream());
 
-                for (ClientHandler clientHandler : ar) {
-                    if (clientHandler.getName().equals(name)) {
-                        throw new IOException("Connection Refused");
-                    }
-                }
                 // Create a new handler object for handling this request.
                 System.out.println("Creating a new handler for this client...");
-                ClientHandler mtch = new ClientHandler(s, name, dis, dos);
+                ClientHandler mtch = new ClientHandler(s, "Client" + i, dis, dos);
 
                 // Create a new Thread with this object.
                 Thread t = new Thread(mtch);
@@ -79,6 +73,10 @@ public class Server {
             e.printStackTrace();
 		}
 	}
+
+	/*public boolean checkName(String name) {
+
+    }*/
 }
 
 // ClientHandler class
@@ -105,6 +103,10 @@ class ClientHandler implements Runnable
 	    return name;
     }
 
+    public void setName(String name) {
+	    this.name = name;
+    }
+
 	@Override
 	public void run() {
 
@@ -128,8 +130,14 @@ class ClientHandler implements Runnable
                 if(received.contains("#")) {
                     // break the string into message and recipient part
                     StringTokenizer st = new StringTokenizer(received, "#");
-                    String MsgToSend = st.nextToken();
+                    String sender = st.nextToken();
                     String recipient = st.nextToken();
+                    String MsgToSend = st.nextToken();
+                    Long timestamp = Long.parseLong(st.nextToken());
+
+                    if (!sender.equals(name)) {
+                        setName(sender);
+                    }
 
                     // search for the recipient in the connected devices list.
                     // ar is the vector storing client of active users
@@ -137,7 +145,7 @@ class ClientHandler implements Runnable
                         // if the recipient is found, write on its
                         // output stream
                         if (mc.name.equals(recipient) && mc.isloggedin == true) {
-                            mc.dos.writeUTF(this.name + " : " + MsgToSend);
+                            mc.dos.writeUTF(this.name + "#" + MsgToSend);
                             break;
                         }
                     }
