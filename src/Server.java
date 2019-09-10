@@ -12,14 +12,14 @@ public class Server {
     static Vector<ClientHandler> ar = new Vector<>();
 
     // counter for clients
-    static int i = 0;
-    // port number
-    static int portNumber;
+    private static int i = 0;
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         // You can't open a port below 1024, if you don't have root privileges
+        // port number
+        int portNumber;
         if (args.length == 0) {
             portNumber = 1025;
         } else if (Integer.parseInt(args[0]) < 1024) {
@@ -77,10 +77,10 @@ public class Server {
 // ClientHandler class
 class ClientHandler implements Runnable {
     private String name;
-    final ObjectInputStream dis;
-    final ObjectOutputStream dos;
-    Socket s;
-    boolean isloggedin;
+    private final ObjectInputStream dis;
+    public final ObjectOutputStream dos;
+    private Socket s;
+    private boolean isloggedin;
     private Queue<Message> queue = new LinkedList<>();
 
     // constructor
@@ -97,11 +97,11 @@ class ClientHandler implements Runnable {
         return name;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
-    public void addMessage(Message message) {
+    private void addMessage(Message message) {
         queue.add(message);
     }
 
