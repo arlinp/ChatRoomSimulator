@@ -4,5 +4,6 @@ public enum MessageType {
     LOGOUT,
     RECONNECT,
     BASIC,
+    RECEIPT,
     QUIT;
 }

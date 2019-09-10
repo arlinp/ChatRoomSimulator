@@ -3,14 +3,24 @@ public class Message {
     private String sender;
     private String recipient;
     private String message;
-    private Long timeStamp;
+    private long timeSent;
+    private long timeReceived;
+
+    public Message(MessageType type){
+        this.type = type;
+    }
+
+    public Message(MessageType type, String sender) {
+        this.type = type;
+        this.sender = sender;
+    }
 
     public Message(MessageType type, String sender, String recipient, String message, Long timeStamp) {
         this.type = type;
         this.sender = sender;
         this.recipient = recipient;
         this.message = message;
-        this.timeStamp = timeStamp;
+        this.timeSent = timeStamp;
     }
 
     public MessageType getType() {
@@ -29,10 +39,6 @@ public class Message {
         return message;
     }
 
-    public Long getTimeStamp() {
-        return timeStamp;
-    }
-
     public void setType(MessageType type) {
         this.type = type;
     }
@@ -49,7 +55,19 @@ public class Message {
         this.message = message;
     }
 
-    public void setTimeStamp(Long timeStamp) {
-        this.timeStamp = timeStamp;
+    public void setTimeSent(long timeSent) {
+        this.timeSent = timeSent;
+    }
+
+    public long getTimeSent() {
+        return timeSent;
+    }
+
+    public long getTimeReceived() {
+        return timeReceived;
+    }
+
+    public void setTimeReceived(long timeReceived) {
+        this.timeReceived = timeReceived;
     }
 }

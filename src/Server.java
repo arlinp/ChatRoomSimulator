@@ -43,6 +43,7 @@ public class Server {
 
                 System.out.println("New client request received : " + s);
 
+
                 // obtain input and output streams
                 ObjectInputStream dis = new ObjectInputStream(s.getInputStream());
                 ObjectOutputStream dos = new ObjectOutputStream(s.getOutputStream());
