@@ -1,54 +1,51 @@
 // Java implementation of Server side 
 // It contains two classes : Server and ClientHandler 
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-
 import java.io.*;
-import java.security.Timestamp;
 import java.util.*;
 import java.net.*;
 
 // Server class 
 public class Server {
 
-	// Vector to store active clients
-	static Vector<ClientHandler> ar = new Vector<>();
+    // Vector to store active clients
+    static Vector<ClientHandler> ar = new Vector<>();
 
-	// counter for clients
-	static int i = 0;
-	// port number
-	static int portNumber;
+    // counter for clients
+    static int i = 0;
+    // port number
+    static int portNumber;
 
 
-	public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
 
-	    // You can't open a port below 1024, if you don't have root privileges
-		if (args.length == 0) {
-		    portNumber = 1025;
+        // You can't open a port below 1024, if you don't have root privileges
+        if (args.length == 0) {
+            portNumber = 1025;
         } else if (Integer.parseInt(args[0]) < 1024) {
-		    portNumber = 1025;
+            portNumber = 1025;
         } else {
-		    portNumber = Integer.parseInt(args[0]);
+            portNumber = Integer.parseInt(args[0]);
         }
         System.out.println("Port number = " + portNumber);
 
-		try {
-			// server is listening on entered port number
-			ServerSocket ss = new ServerSocket(portNumber);
+        try {
+            // server is listening on entered port number
+            ServerSocket ss = new ServerSocket(portNumber);
 
-			Socket s;
+            Socket s;
 
 
-			// client request using infinite loop
-			while (true) {
-			    // Accept the incoming request
-				s = ss.accept();
+            // client request using infinite loop
+            while (true) {
+                // Accept the incoming request
+                s = ss.accept();
 
-				System.out.println("New client request received : " + s);
+                System.out.println("New client request received : " + s);
 
-				// obtain input and output streams
-				ObjectInputStream dis = new ObjectInputStream(s.getInputStream());
-				ObjectOutputStream dos = new ObjectOutputStream(s.getOutputStream());
+                // obtain input and output streams
+                ObjectInputStream dis = new ObjectInputStream(s.getInputStream());
+                ObjectOutputStream dos = new ObjectOutputStream(s.getOutputStream());
 
                 // Create a new handler object for handling this request.
                 System.out.println("Creating a new handler for this client...");
@@ -71,62 +68,61 @@ public class Server {
                 i++;
             }
 
-		} catch (IOException e) { // Letting client know that the connection was Refused
+        } catch (IOException e) { // Letting client know that the connection was Refused
             e.printStackTrace();
-		}
-	}
-
-	/*public boolean checkName(String name) {
-
-    }*/
+        }
+    }
 }
 
 // ClientHandler class
-class ClientHandler implements Runnable
-{
-	Scanner scn = new Scanner(System.in);
-	private String name;
-	final ObjectInputStream dis;
-	final ObjectOutputStream dos;
-	Socket s;
-	boolean isloggedin;
+class ClientHandler implements Runnable {
+    private String name;
+    final ObjectInputStream dis;
+    final ObjectOutputStream dos;
+    Socket s;
+    boolean isloggedin;
+    private Queue<Message> queue = new LinkedList<>();
 
-	// constructor
-	public ClientHandler(Socket s, String name,
-							ObjectInputStream dis, ObjectOutputStream dos) {
-		this.dis = dis;
-		this.dos = dos;
-		this.name = name;
-		this.s = s;
-		this.isloggedin=true;
-	}
+    // constructor
+    public ClientHandler(Socket s, String name,
+                         ObjectInputStream dis, ObjectOutputStream dos) {
+        this.dis = dis;
+        this.dos = dos;
+        this.name = name;
+        this.s = s;
+        this.isloggedin = true;
+    }
 
-	public String getName() {
-	    return name;
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
-	    this.name = name;
+        this.name = name;
     }
 
-	@Override
-	public void run() {
+    public void addMessage(Message message) {
+        queue.add(message);
+    }
 
-		try {
-			Message received;
-			while (true) {
-				// receive the string
-				received = (Message) dis.readObject();
+    @Override
+    public void run() {
 
-				System.out.println(received);
+        Message received;
+        while (true) {
+            try {
+                // receive the string
+                received = (Message) dis.readObject();
 
-				switch (received.getType()) {
+                System.out.println(received);
+
+                switch (received.getType()) {
                     case LOGOUT:
+                        // Not closing connection to avoid reestablishing a connection for "reconnect"
                         this.isloggedin = false;
-                        //this.s.close();
                         break;
                     case SETNAME:
-                        // If we have time we need to implement that the check is completely unique
+                        // If we have time we need to implement that the name is completely unique
 //                        for (ClientHandler mc : Server.ar) {
 //                            if (mc.getName().equals(received.getSender())) {
 //                                dos.writeObject(new Message(MessageType.BASIC, null, null, null, null));
@@ -140,35 +136,38 @@ class ClientHandler implements Runnable
                         break;
                     case RECONNECT:
                         this.isloggedin = true;
+                        // Send stored messages to client
+                        while (!queue.isEmpty()) {
+                            this.dos.writeObject(queue.remove());
+                        }
                         break;
                     case SENDMESSAGE:
                         for (ClientHandler mc : Server.ar) {
                             // if the recipient is found, write on its
                             // output stream
-                            if (mc.getName().equals(received.getRecipient()) && mc.isloggedin == true) {
-                                //mc.dos.writeUTF(getName() + "#" + received); Need to update client to handle message object
+                            if (mc.getName().equals(received.getRecipient()) && mc.isloggedin) {
+                                // Need to update client to handle message object
+                                mc.dos.writeObject(received);
                                 break;
+                            } else if (!mc.isloggedin){
+                                // Store messages while client is "logged out"
+                                mc.addMessage(received);
                             }
                         }
                         break;
+                    case QUIT:
+                        // Graceful exit
+                        this.dis.close();
+                        this.dos.close();
+                        this.s.close();
+                        Server.ar.remove(this);
+                        break;
                 }
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		try
-		{
-			// closing resources
-			this.dis.close();
-			this.dos.close();
-
-		}catch(IOException e){
-			e.printStackTrace();
-		}
-	}
+    }
 }
 

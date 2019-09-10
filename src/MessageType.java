@@ -3,5 +3,6 @@ public enum MessageType {
     SETNAME,
     LOGOUT,
     RECONNECT,
-    BASIC;
+    BASIC,
+    QUIT;
 }
