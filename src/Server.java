@@ -121,11 +121,16 @@ class ClientHandler implements Runnable
 
 				System.out.println(received);
 
-				if(received.equals("logout")){
+				if(received.equals("logout")) {
 					this.isloggedin=false;
-					this.s.close();
-					break;
+                    //this.s.close();
+                    break;
 				}
+
+				if(received.equals("connect")) {
+				    this.isloggedin = true;
+				    break;
+                }
 
                 if(received.contains("#")) {
                     // break the string into message and recipient part
@@ -136,6 +141,15 @@ class ClientHandler implements Runnable
                     Long timestamp = Long.parseLong(st.nextToken());
 
                     if (!sender.equals(name)) {
+//                        for (ClientHandler mc : Server.ar) {
+//                            if (mc.getName().equals(name)) {
+//                                this.dos.writeUTF("basic");
+//                                this.s.close();
+//                                break;
+//                            } else {
+//                                continue;
+//                            }
+//                        }
                         setName(sender);
                     }
 
@@ -144,10 +158,13 @@ class ClientHandler implements Runnable
                     for (ClientHandler mc : Server.ar) {
                         // if the recipient is found, write on its
                         // output stream
-                        if (mc.name.equals(recipient) && mc.isloggedin == true) {
-                            mc.dos.writeUTF(this.name + "#" + MsgToSend);
+                        if (mc.getName().equals(recipient) && mc.isloggedin == true) {
+                            mc.dos.writeUTF(getName() + "#" + MsgToSend);
                             break;
                         }
+//                        else if (mc.getName().equals()) {
+//
+//                        }
                     }
                 }
 			} catch (IOException e) {
