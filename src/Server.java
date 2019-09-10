@@ -1,6 +1,8 @@
 // Java implementation of Server side 
 // It contains two classes : Server and ClientHandler 
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import java.io.*;
 import java.security.Timestamp;
 import java.util.*;
@@ -45,8 +47,8 @@ public class Server {
 				System.out.println("New client request received : " + s);
 
 				// obtain input and output streams
-				DataInputStream dis = new DataInputStream(s.getInputStream());
-				DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+				ObjectInputStream dis = new ObjectInputStream(s.getInputStream());
+				ObjectOutputStream dos = new ObjectOutputStream(s.getOutputStream());
 
                 // Create a new handler object for handling this request.
                 System.out.println("Creating a new handler for this client...");
@@ -84,14 +86,14 @@ class ClientHandler implements Runnable
 {
 	Scanner scn = new Scanner(System.in);
 	private String name;
-	final DataInputStream dis;
-	final DataOutputStream dos;
+	final ObjectInputStream dis;
+	final ObjectOutputStream dos;
 	Socket s;
 	boolean isloggedin;
 
 	// constructor
 	public ClientHandler(Socket s, String name,
-							DataInputStream dis, DataOutputStream dos) {
+							ObjectInputStream dis, ObjectOutputStream dos) {
 		this.dis = dis;
 		this.dos = dos;
 		this.name = name;
@@ -110,69 +112,54 @@ class ClientHandler implements Runnable
 	@Override
 	public void run() {
 
-		String received;
-		while (true)
-		{
-			try
-			{
-
+		try {
+			Message received;
+			while (true) {
 				// receive the string
-				received = dis.readUTF();
+				received = (Message) dis.readObject();
 
 				System.out.println(received);
 
-				if(received.equals("logout")) {
-					this.isloggedin=false;
-                    //this.s.close();
-                    break;
-				}
-
-				if(received.equals("connect")) {
-				    this.isloggedin = true;
-				    break;
-                }
-
-                if(received.contains("#")) {
-                    // break the string into message and recipient part
-                    StringTokenizer st = new StringTokenizer(received, "#");
-                    String sender = st.nextToken();
-                    String recipient = st.nextToken();
-                    String MsgToSend = st.nextToken();
-                    Long timestamp = Long.parseLong(st.nextToken());
-
-                    if (!sender.equals(name)) {
+				switch (received.getType()) {
+                    case LOGOUT:
+                        this.isloggedin = false;
+                        //this.s.close();
+                        break;
+                    case SETNAME:
+                        // If we have time we need to implement that the check is completely unique
 //                        for (ClientHandler mc : Server.ar) {
-//                            if (mc.getName().equals(name)) {
-//                                this.dos.writeUTF("basic");
+//                            if (mc.getName().equals(received.getSender())) {
+//                                dos.writeObject(new Message(MessageType.BASIC, null, null, null, null));
 //                                this.s.close();
 //                                break;
-//                            } else {
-//                                continue;
 //                            }
 //                        }
-                        setName(sender);
-                    }
-
-                    // search for the recipient in the connected devices list.
-                    // ar is the vector storing client of active users
-                    for (ClientHandler mc : Server.ar) {
-                        // if the recipient is found, write on its
-                        // output stream
-                        if (mc.getName().equals(recipient) && mc.isloggedin == true) {
-                            mc.dos.writeUTF(getName() + "#" + MsgToSend);
-                            break;
+                        if (!received.getRecipient().equals(this.name)) {
+                            setName(received.getSender());
                         }
-//                        else if (mc.getName().equals()) {
-//
-//                        }
-                    }
+                        break;
+                    case RECONNECT:
+                        this.isloggedin = true;
+                        break;
+                    case SENDMESSAGE:
+                        for (ClientHandler mc : Server.ar) {
+                            // if the recipient is found, write on its
+                            // output stream
+                            if (mc.getName().equals(received.getRecipient()) && mc.isloggedin == true) {
+                                //mc.dos.writeUTF(getName() + "#" + received); Need to update client to handle message object
+                                break;
+                            }
+                        }
+                        break;
                 }
-			} catch (IOException e) {
 
-				e.printStackTrace();
 			}
-
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
+
 		try
 		{
 			// closing resources
