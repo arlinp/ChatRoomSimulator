@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Message {
     private MessageType type;
     private String sender;
@@ -5,6 +7,7 @@ public class Message {
     private String message;
     private long timeSent;
     private long timeReceived;
+    private ArrayList<String> users;
 
     public Message(MessageType type){
         this.type = type;
@@ -21,6 +24,15 @@ public class Message {
         this.recipient = recipient;
         this.message = message;
         this.timeSent = timeStamp;
+    }
+
+    public Message(MessageType type, ArrayList<String> users) {
+        this.type = type;
+        this.users = users;
+    }
+
+    public ArrayList<String> getUsers() {
+        return users;
     }
 
     public MessageType getType() {

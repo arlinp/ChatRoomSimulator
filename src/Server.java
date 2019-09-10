@@ -14,6 +14,7 @@ public class Server {
     // counter for clients
     private static int i = 0;
 
+    public static ArrayList<String> userNames = new ArrayList<>();
 
     public static void main(String[] args) {
 
@@ -124,15 +125,16 @@ class ClientHandler implements Runnable {
                         break;
                     case SETNAME:
                         // If we have time we need to implement that the name is completely unique
-//                        for (ClientHandler mc : Server.ar) {
-//                            if (mc.getName().equals(received.getSender())) {
-//                                dos.writeObject(new Message(MessageType.BASIC, null, null, null, null));
-//                                this.s.close();
-//                                break;
-//                            }
-//                        }
-                        if (!received.getRecipient().equals(this.name)) {
+
+                        if (!checkName(received.getSender())) {
                             setName(received.getSender());
+                            Server.userNames.add(received.getSender());
+                            for (ClientHandler mc : Server.ar) {
+                                mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
+                            }
+                        } else {
+                            this.dos.writeObject(new Message(MessageType.BASIC));
+                            quit();
                         }
                         break;
                     case RECONNECT:
@@ -158,17 +160,36 @@ class ClientHandler implements Runnable {
                         break;
                     case QUIT:
                         // Graceful exit
-                        this.dis.close();
-                        this.dos.close();
-                        this.s.close();
-                        Server.ar.remove(this);
+                        quit();
                         break;
                 }
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
         }
+    }
 
+    private Boolean checkName(String name) {
+        Boolean r = false;
+        for (ClientHandler mc : Server.ar) {
+            if (name.equals(mc.getName())) {
+                r = true;
+            } else {
+                r = true;
+            }
+        }
+        return r;
+    }
+
+    private void quit() {
+        try {
+            this.dis.close();
+            this.dos.close();
+            this.s.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Server.ar.remove(this);
     }
 }
 
