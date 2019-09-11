@@ -130,14 +130,20 @@ class ClientHandler implements Runnable {
                     case SETNAME:
                         // If we have time we need to implement that the name is completely unique
 
-                        if (!checkName(received.getSender())) {
+                        if (checkName(received.getSender())) {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
                             for (ClientHandler mc : Server.ar) {
-                                mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
+                                if (!mc.getName().equals(this.getName())){
+                                    mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
+                                    mc.dos.reset();
+                                    mc.dos.flush();
+                                }
                             }
                         } else {
                             this.dos.writeObject(new Message(MessageType.BASIC));
+                            this.dos.reset();
+                            this.dos.flush();
                             quit();
                         }
                         break;
@@ -146,6 +152,8 @@ class ClientHandler implements Runnable {
                         // Send stored messages to client
                         while (!queue.isEmpty()) {
                             this.dos.writeObject(queue.remove());
+                            this.dos.reset();
+                            this.dos.flush();
                         }
                         break;
                     case SENDMESSAGE:
@@ -155,6 +163,8 @@ class ClientHandler implements Runnable {
                             if (mc.getName().equals(received.getRecipient()) && mc.isloggedin) {
                                 // Need to update client to handle message object
                                 mc.dos.writeObject(received);
+                                mc.dos.reset();
+                                mc.dos.flush();
                                 break;
                             } else if (!mc.isloggedin){
                                 // Store messages while client is "logged out"
@@ -177,7 +187,7 @@ class ClientHandler implements Runnable {
         Boolean r = false;
         for (ClientHandler mc : Server.ar) {
             if (name.equals(mc.getName())) {
-                r = true;
+                r = false;
             } else {
                 r = true;
             }
