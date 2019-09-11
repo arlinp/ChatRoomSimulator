@@ -14,7 +14,7 @@ public class Server {
     // counter for clients
     private static int i = 0;
 
-    public static ArrayList<String> userNames = new ArrayList<>();
+    public static transient ArrayList<String> userNames = new ArrayList<>();
 
     public static void main(String[] args) {
 
