@@ -5,5 +5,6 @@ public enum MessageType {
     RECONNECT,
     BASIC,
     RECEIPT,
-    QUIT;
+    QUIT,
+    ACTIVEUSERS;
 }
