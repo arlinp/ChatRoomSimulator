@@ -89,8 +89,8 @@ class ClientHandler implements Runnable {
     public ClientHandler(Socket s, String name,
                          InputStream dis, OutputStream dos) {
         try {
-            this.dis = new ObjectInputStream(dis);
             this.dos = new ObjectOutputStream(dos);
+            this.dis = new ObjectInputStream(dis);
         } catch (IOException e) {
             e.printStackTrace();
         }
