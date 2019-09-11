@@ -8,7 +8,7 @@ public class Message implements Serializable {
     private String message;
     private long timeSent;
     private long timeReceived;
-    private ArrayList<String> users;
+    private transient ArrayList<String> users;
 
     public Message(MessageType type){
         this.type = type;
