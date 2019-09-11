@@ -10,32 +10,153 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.scene.paint.Color;
+import java.util.Date;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Scanner;
+
 
 public class ClientGUI extends Application {
 
-    Client client;
-    StringBuilder log;
+    private static long timeSent;
+    private static long timeReceived;
+    private static int ServerPort = 1025;
+    private static String username;
+    private static InetAddress ip;
+    private static Boolean sendFlag = false;
+    private static TextArea textField = new TextArea("Enter text here...");
+    private static TextField recipientField = new TextField("Recipient:");
+    private static Text names = new Text(username);
 
-    public ClientGUI(Client c){
-        this.client = c;
-        this.log = c.log;
+    //Saved lists
+    private static ArrayList<String> activeUsers = new ArrayList<>();
+    private static StringBuilder log = new StringBuilder();
+    private static ArrayList<Message> savedMessages = new ArrayList<>();
 
-    }
+    //Display aspects
+    private static String sendingTo;
+    private static Text logDisplay = new Text();
+
 
     public static void main(String[] args) throws UnknownHostException, IOException {
+
+        /**commenting out until I figure out a way separate this from output data stream**/
+
+        username = "Candid";
+
+//        ip = InetAddress.getByName(args[0]);
+        //       ServerPort = Integer.parseInt(args[1]);
+        //       username = args[2];
+
+//         getting localhost ip
+        InetAddress ip = InetAddress.getByName("localhost");
+
+        // establish the connection
+        Socket s = new Socket(ip, ServerPort);
+
+        ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
+        ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+
+        Message hello = new Message(MessageType.SETNAME, username);
+        oos.writeObject(hello);
+
+
+        Date date = java.util.Calendar.getInstance().getTime();
+        log.append("\n" + date + " You" + " (" + username + ")" + " have entered the chat room.");
+
+        // sendMessage thread
+        Thread sendMessage = new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                while (true) {
+
+                    // read the message to deliver.
+                    System.out.println("in thread");
+                    if (sendFlag) {
+                        String msg = textField.getText();
+                        System.out.println("worked!");
+                        sendingTo = recipientField.getText();
+                        log.append("\n" + date + " " + username + ": " + "@" + sendingTo + " " + msg);
+                        logDisplay.setText(log.toString());
+                        textField.setText("Enter text here...");
+                        recipientField.setText("Recipient:");
+                        sendFlag = false;
+
+                        if (!msg.isEmpty()) {
+
+                            //create message object
+                            Message newMsg = new Message(MessageType.SENDMESSAGE);
+                            newMsg.setSender(username);
+                            newMsg.setRecipient(sendingTo);
+                            newMsg.setMessage(msg);
+
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                savedMessages.add(newMsg);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // readMessage thread
+        Thread readMessage = new Thread(new Runnable()
+        {
+            /**when reuben sends me a message he sends
+             * sendersname#msg
+             */
+
+            @Override
+            public void run() {
+
+                while (true) {
+                    try {
+                        // read the message sent to this client
+                        // set time received stamp
+                        Message msgReceived = (Message)ois.readObject();
+                        msgReceived.setTimeReceived(System.currentTimeMillis());
+                        savedMessages.add(msgReceived);
+
+                        //Send receipt to server
+                        Message receipt = msgReceived;
+                        receipt.setType(MessageType.RECEIPT);
+                        oos.writeObject(receipt);
+
+                        //print message received
+                        System.out.println(msgReceived.getMessage());
+
+                    } catch (IOException e) {
+
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        System.out.println("goddamnit amber");
+        sendMessage.start();
+        readMessage.start();
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-
         primaryStage.setTitle("Chat Server");
 
         VBox root = new VBox(5);
@@ -74,24 +195,16 @@ public class ClientGUI extends Application {
         header.setStroke(Color.NAVY);
         header.setTranslateX(-370);
         header.setTranslateY(-411);
-        header.setFont(Font.font ("Verdana", 16));
+        header.setFont(Font.font("Verdana", 16));
 
-        StringBuilder listMaker = new StringBuilder();
-        listMaker.append("\n" + "ambajamba");
-        listMaker.append("\n" + "Arl.in");
-        listMaker.append("\n" + "Candid");
-        listMaker.append("\n" + "helium");
-
-        Text names = new Text(listMaker.toString());
         names.setStroke(Color.DARKGOLDENROD);
         names.setX(7);
         names.setY(72);
-        names.setFont(Font.font ("Verdana", 13));
+        names.setFont(Font.font("Verdana", 13));
 
         root.getChildren().addAll(header);
         glass.getChildren().add(names);
 
-        TextArea textField = new TextArea("Enter text here...");
         textField.setMaxWidth(700);
         textField.setMaxHeight(70);
         textField.setMinHeight(70);
@@ -101,7 +214,6 @@ public class ClientGUI extends Application {
         textField.setStyle("-fx-control-inner-background: grey;" +
                 "-fx-background: grey; -fx-border-insets:0;");
 
-        TextField recipientField = new TextField("Recipient:");
         recipientField.setMaxWidth(95);
         recipientField.setMinWidth(95);
         recipientField.setMaxHeight(15);
@@ -134,9 +246,8 @@ public class ClientGUI extends Application {
 
             @Override
             public void handle(ActionEvent event) {
-                System.out.println(textField.getText());
-                textField.clear();
-                recipientField.clear();
+                sendFlag = true;
+                System.out.println(sendFlag);
             }
         });
 
