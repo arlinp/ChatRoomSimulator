@@ -46,8 +46,8 @@ public class Server {
 
 
                 // obtain input and output streams
-                ObjectInputStream dis = new ObjectInputStream(s.getInputStream());
-                ObjectOutputStream dos = new ObjectOutputStream(s.getOutputStream());
+                InputStream dis = s.getInputStream();
+                OutputStream dos = s.getOutputStream();
 
                 // Create a new handler object for handling this request.
                 System.out.println("Creating a new handler for this client...");
@@ -79,17 +79,21 @@ public class Server {
 // ClientHandler class
 class ClientHandler implements Runnable {
     private String name;
-    private final ObjectInputStream dis;
-    public final ObjectOutputStream dos;
+    private ObjectInputStream dis;
+    private ObjectOutputStream dos;
     private Socket s;
     private boolean isloggedin;
     private Queue<Message> queue = new LinkedList<>();
 
     // constructor
     public ClientHandler(Socket s, String name,
-                         ObjectInputStream dis, ObjectOutputStream dos) {
-        this.dis = dis;
-        this.dos = dos;
+                         InputStream dis, OutputStream dos) {
+        try {
+            this.dis = new ObjectInputStream(dis);
+            this.dos = new ObjectOutputStream(dos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.name = name;
         this.s = s;
         this.isloggedin = true;
