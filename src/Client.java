@@ -5,6 +5,7 @@ import javafx.scene.text.Text;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -100,6 +101,7 @@ public class Client {
         Thread readMessage = new Thread(new Runnable() {
             @Override
             public void run() {
+                Date date;
 
                 while (true) {
                     try {
@@ -108,6 +110,12 @@ public class Client {
                         Message msgReceived = (Message) ois.readObject();
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         savedMessages.add(msgReceived);
+                        System.out.println("received");
+
+                        date = java.util.Calendar.getInstance().getTime();
+
+                        System.out.println(date + " " + msgReceived.getSender() + ": " + "@" + msgReceived.getRecipient() + " " +
+                                msgReceived.getMessage());
 
                         //Send receipt to server
                         Message receipt = msgReceived;
@@ -118,7 +126,7 @@ public class Client {
 
                         //print message received
                         if (msgReceived == null) {
-                            System.out.println("received message-less message");
+                            System.out.println("received empty message");
                         }
                         System.out.println(msgReceived.getMessage());
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
