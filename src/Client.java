@@ -67,36 +67,54 @@ public class Client {
                     if (!msg.isEmpty()) {
                         Message newMsg;
                         StringTokenizer tkmsg = new StringTokenizer(msg);
+                        String command = tkmsg.nextToken();
 
                         //if changing who we're sending to
-                        if (tkmsg.nextToken().equalsIgnoreCase("logout")) {
+                        if (command.equalsIgnoreCase("logout")) {
                             newMsg = new Message(MessageType.LOGOUT);
                             System.out.println("You have logged out");
+                        }
+                        if (command.equalsIgnoreCase("chgName")) {
+                            username = tkmsg.nextToken();
+                            newMsg = new Message(MessageType.SETNAME);
+                            newMsg.setSender(username);
+                            System.out.println("You changed your name to " + username);
+
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                                savedMessages.add(newMsg);
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
 
                         else {
                             //create message object
-                            StringTokenizer tokened = new StringTokenizer(msg);
-                            sendingTo = tokened.nextToken();
+                            sendingTo = command;
                             newMsg = new Message(MessageType.SENDMESSAGE);
                             newMsg.setSender(username);
                             newMsg.setRecipient(sendingTo);
-                            newMsg.setMessage(tokened.nextToken());
+                            newMsg.setMessage(tkmsg.nextToken());
 
-                        }
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                                savedMessages.add(newMsg);
+                                System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
+                                        newMsg.getMessage());
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
-                        try {
-                            // set timeSent and write on the output stream
-                            newMsg.setTimeSent(System.currentTimeMillis());
-                            oos.writeObject(newMsg);
-                            oos.reset();
-                            oos.flush();
-                            savedMessages.add(newMsg);
-                            System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
-                                    newMsg.getMessage());
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
                         }
                     }
                 }
