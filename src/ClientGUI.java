@@ -124,6 +124,7 @@ public class ClientGUI extends Application implements Serializable{
                     try {
                         Thread.sleep(1);
                     } catch (InterruptedException e) {
+                        System.out.println("User disconnected");
                         e.printStackTrace();
                     }
                 }

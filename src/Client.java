@@ -69,28 +69,32 @@ public class Client {
                         StringTokenizer tkmsg = new StringTokenizer(msg);
 
                         //if changing who we're sending to
-                        if (tkmsg.nextToken().contains("SENDTO")) {
-                            sendingTo = tkmsg.nextToken();
-                            System.out.println("Now sending to " + sendingTo);
+                        if (tkmsg.nextToken().equalsIgnoreCase("logout")) {
+                            newMsg = new Message(MessageType.LOGOUT);
+                            System.out.println("You have logged out");
                         }
+
                         else {
                             //create message object
+                            StringTokenizer tokened = new StringTokenizer(msg);
+                            sendingTo = tokened.nextToken();
                             newMsg = new Message(MessageType.SENDMESSAGE);
                             newMsg.setSender(username);
                             newMsg.setRecipient(sendingTo);
-                            newMsg.setMessage(msg);
+                            newMsg.setMessage(tokened.nextToken());
 
-                            try {
-                                // set timeSent and write on the output stream
-                                newMsg.setTimeSent(System.currentTimeMillis());
-                                oos.writeObject(newMsg);
-                                oos.reset();
-                                oos.flush();
-                                savedMessages.add(newMsg);
-                            }
-                            catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                        }
+
+                        try {
+                            // set timeSent and write on the output stream
+                            newMsg.setTimeSent(System.currentTimeMillis());
+                            oos.writeObject(newMsg);
+                            oos.reset();
+                            oos.flush();
+                            savedMessages.add(newMsg);
+                        }
+                        catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -110,7 +114,6 @@ public class Client {
                         Message msgReceived = (Message) ois.readObject();
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         savedMessages.add(msgReceived);
-                        System.out.println("received");
 
                         date = java.util.Calendar.getInstance().getTime();
 
@@ -128,7 +131,6 @@ public class Client {
                         if (msgReceived == null) {
                             System.out.println("received empty message");
                         }
-                        System.out.println(msgReceived.getMessage());
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
                             System.out.println("got active users list");
                         }
