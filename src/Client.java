@@ -92,6 +92,8 @@ public class Client {
                             oos.reset();
                             oos.flush();
                             savedMessages.add(newMsg);
+                            System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
+                                    newMsg.getMessage());
                         }
                         catch (IOException e) {
                             e.printStackTrace();
@@ -117,7 +119,7 @@ public class Client {
 
                         date = java.util.Calendar.getInstance().getTime();
 
-                        System.out.println(date + " " + msgReceived.getSender() + ": " + "@" + msgReceived.getRecipient() + " " +
+                        System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
                                 msgReceived.getMessage());
 
                         //Send receipt to server
