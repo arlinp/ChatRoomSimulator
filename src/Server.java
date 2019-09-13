@@ -128,8 +128,6 @@ class ClientHandler implements Runnable {
                         this.isloggedin = false;
                         break;
                     case SETNAME:
-                        // If we have time we need to implement that the name is completely unique
-
                         if (checkName(received.getSender())) {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
@@ -166,6 +164,7 @@ class ClientHandler implements Runnable {
                                 mc.dos.reset();
                                 mc.dos.flush();
                                 break;
+
                             } else if (!mc.isloggedin){
                                 // Store messages while client is "logged out"
                                 mc.addMessage(received);
