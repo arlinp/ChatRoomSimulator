@@ -60,62 +60,64 @@ public class Client {
             @Override
             public void run() {
                 while (true) {
+                    try {
+                        // read the message to deliver.
+                        String msg = scn.nextLine();
 
-                    // read the message to deliver.
-                    String msg = scn.nextLine();
+                        if (!msg.isEmpty()) {
+                            Message newMsg;
+                            StringTokenizer tkmsg = new StringTokenizer(msg);
+                            String command = tkmsg.nextToken();
 
-                    if (!msg.isEmpty()) {
-                        Message newMsg;
-                        StringTokenizer tkmsg = new StringTokenizer(msg);
-                        String command = tkmsg.nextToken();
-
-                        //if changing who we're sending to
-                        if (command.equalsIgnoreCase("logout")) {
-                            newMsg = new Message(MessageType.LOGOUT);
-                            System.out.println("You have logged out");
-                        }
-                        if (command.equalsIgnoreCase("chgName")) {
-                            username = tkmsg.nextToken();
-                            newMsg = new Message(MessageType.SETNAME);
-                            newMsg.setSender(username);
-                            System.out.println("You changed your name to " + username);
-
-                            try {
+                            // logging out
+                            if (command.equalsIgnoreCase("logout")) {
+                                newMsg = new Message(MessageType.LOGOUT);
+                                System.out.println("You have logged out");
+                            }
+                            //view all active users
+                            if (command.equalsIgnoreCase("active")) {
+                                System.out.println("Here are the active users: ");
+                                for (String user: activeUsers) {
+                                    System.out.println(user);
+                                }
+                            }
+                            //changing your username - send change to server
+                            if (command.equalsIgnoreCase("chgName")) {
+                                username = tkmsg.nextToken();
+                                newMsg = new Message(MessageType.SETNAME);
+                                newMsg.setSender(username);
+                                System.out.println("You changed your name to " + username);
                                 // set timeSent and write on the output stream
                                 newMsg.setTimeSent(System.currentTimeMillis());
                                 oos.writeObject(newMsg);
                                 oos.reset();
                                 oos.flush();
                                 savedMessages.add(newMsg);
-                            }
-                            catch (IOException e) {
-                                e.printStackTrace();
+                            } else {
+                                //create message object
+                                sendingTo = command;
+                                newMsg = new Message(MessageType.SENDMESSAGE);
+                                newMsg.setSender(username);
+                                newMsg.setRecipient(sendingTo);
+                                newMsg.setMessage(tkmsg.nextToken());
+
+                                try {
+                                    // set timeSent and write on the output stream
+                                    newMsg.setTimeSent(System.currentTimeMillis());
+                                    oos.writeObject(newMsg);
+                                    oos.reset();
+                                    oos.flush();
+                                    savedMessages.add(newMsg);
+                                    System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
+                                            newMsg.getMessage());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
-
-                        else {
-                            //create message object
-                            sendingTo = command;
-                            newMsg = new Message(MessageType.SENDMESSAGE);
-                            newMsg.setSender(username);
-                            newMsg.setRecipient(sendingTo);
-                            newMsg.setMessage(tkmsg.nextToken());
-
-                            try {
-                                // set timeSent and write on the output stream
-                                newMsg.setTimeSent(System.currentTimeMillis());
-                                oos.writeObject(newMsg);
-                                oos.reset();
-                                oos.flush();
-                                savedMessages.add(newMsg);
-                                System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
-                                        newMsg.getMessage());
-                            }
-                            catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -152,7 +154,7 @@ public class Client {
                             System.out.println("received empty message");
                         }
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
-                            System.out.println("got active users list");
+                            System.out.println("Received active users list");
                         }
 
                     } catch (IOException e) {
