@@ -1,4 +1,5 @@
 // Java implementation for multithreaded chat client
+// Command-line Version 1.0
 
 import javafx.scene.text.Text;
 
@@ -46,9 +47,11 @@ public class Client {
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
 
+        // establish output streams
         ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
         ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
 
+        //send a hello message to register username with client
         Message hello = new Message(MessageType.SETNAME, username);
         oos.writeObject(hello);
         oos.reset();
