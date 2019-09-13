@@ -5,6 +5,7 @@ import javafx.scene.text.Text;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -66,18 +67,18 @@ public class Client {
                     if (!msg.isEmpty()) {
                         Message newMsg;
                         StringTokenizer tkmsg = new StringTokenizer(msg);
+                        String command = tkmsg.nextToken();
 
                         //if changing who we're sending to
-                        if (tkmsg.nextToken().contains("SENDTO")) {
-                            sendingTo = tkmsg.nextToken();
-                            System.out.println("Now sending to " + sendingTo);
+                        if (command.equalsIgnoreCase("logout")) {
+                            newMsg = new Message(MessageType.LOGOUT);
+                            System.out.println("You have logged out");
                         }
-                        else {
-                            //create message object
-                            newMsg = new Message(MessageType.SENDMESSAGE);
+                        if (command.equalsIgnoreCase("chgName")) {
+                            username = tkmsg.nextToken();
+                            newMsg = new Message(MessageType.SETNAME);
                             newMsg.setSender(username);
-                            newMsg.setRecipient(sendingTo);
-                            newMsg.setMessage(msg);
+                            System.out.println("You changed your name to " + username);
 
                             try {
                                 // set timeSent and write on the output stream
@@ -91,6 +92,30 @@ public class Client {
                                 e.printStackTrace();
                             }
                         }
+
+                        else {
+                            //create message object
+                            sendingTo = command;
+                            newMsg = new Message(MessageType.SENDMESSAGE);
+                            newMsg.setSender(username);
+                            newMsg.setRecipient(sendingTo);
+                            newMsg.setMessage(tkmsg.nextToken());
+
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                                savedMessages.add(newMsg);
+                                System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
+                                        newMsg.getMessage());
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
                     }
                 }
             }
@@ -100,6 +125,7 @@ public class Client {
         Thread readMessage = new Thread(new Runnable() {
             @Override
             public void run() {
+                Date date;
 
                 while (true) {
                     try {
@@ -108,6 +134,11 @@ public class Client {
                         Message msgReceived = (Message) ois.readObject();
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         savedMessages.add(msgReceived);
+
+                        date = java.util.Calendar.getInstance().getTime();
+
+                        System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
+                                msgReceived.getMessage());
 
                         //Send receipt to server
                         Message receipt = msgReceived;
@@ -118,9 +149,8 @@ public class Client {
 
                         //print message received
                         if (msgReceived == null) {
-                            System.out.println("received message-less message");
+                            System.out.println("received empty message");
                         }
-                        System.out.println(msgReceived.getMessage());
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
                             System.out.println("got active users list");
                         }

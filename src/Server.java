@@ -158,7 +158,8 @@ class ClientHandler implements Runnable {
                         for (ClientHandler mc : Server.ar) {
                             // if the recipient is found, write on its
                             // output stream
-                            if (mc.getName().equals(received.getRecipient()) && mc.isloggedin) {
+                            if (received.getRecipient().equalsIgnoreCase("all") ||
+                                    mc.getName().equals(received.getRecipient()) && mc.isloggedin) {
                                 // Need to update client to handle message object
                                 mc.dos.writeObject(received);
                                 mc.dos.reset();

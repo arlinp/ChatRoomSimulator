@@ -1,4 +1,7 @@
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -23,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 
-public class ClientGUI extends Application {
+public class ClientGUI extends Application implements Serializable{
 
     private static long timeSent;
     private static long timeReceived;
@@ -31,9 +34,6 @@ public class ClientGUI extends Application {
     private static String username;
     private static InetAddress ip;
     private static Boolean sendFlag = false;
-    private static TextArea textField = new TextArea("Enter text here...");
-    private static TextField recipientField = new TextField("Recipient:");
-    private static Text names = new Text(username);
 
     //Saved lists
     private static ArrayList<String> activeUsers = new ArrayList<>();
@@ -43,6 +43,12 @@ public class ClientGUI extends Application {
     //Display aspects
     private static String sendingTo;
     private static Text logDisplay = new Text();
+    private static ScrollPane chatBox = new ScrollPane();
+    private static VBox root = new VBox(5);
+    private static Pane glass2 = new Pane();
+    private static TextArea textField = new TextArea("Enter text here...");
+    private static TextField recipientField = new TextField("Recipient:");
+    private static Text names = new Text(username);
 
 
     public static void main(String[] args) throws UnknownHostException, IOException {
@@ -61,11 +67,12 @@ public class ClientGUI extends Application {
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
 
-        ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
         ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+        ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
 
         Message hello = new Message(MessageType.SETNAME, username);
         oos.writeObject(hello);
+        oos.flush();
 
 
         Date date = java.util.Calendar.getInstance().getTime();
@@ -76,38 +83,49 @@ public class ClientGUI extends Application {
         {
             @Override
             public void run() {
+                Date date;
                 while (true) {
-
                     // read the message to deliver.
-                    System.out.println("in thread");
                     if (sendFlag) {
+                        //messageCount++;
+                        date = java.util.Calendar.getInstance().getTime();
                         String msg = textField.getText();
-                        System.out.println("worked!");
                         sendingTo = recipientField.getText();
                         log.append("\n" + date + " " + username + ": " + "@" + sendingTo + " " + msg);
-                        logDisplay.setText(log.toString());
-                        textField.setText("Enter text here...");
-                        recipientField.setText("Recipient:");
                         sendFlag = false;
-
-                        if (!msg.isEmpty()) {
-
-                            //create message object
-                            Message newMsg = new Message(MessageType.SENDMESSAGE);
-                            newMsg.setSender(username);
-                            newMsg.setRecipient(sendingTo);
-                            newMsg.setMessage(msg);
-
-                            try {
-                                // set timeSent and write on the output stream
-                                newMsg.setTimeSent(System.currentTimeMillis());
-                                oos.writeObject(newMsg);
-                                savedMessages.add(newMsg);
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                logDisplay.setText(log.toString());
+                                textField.setText("Enter text here...");
+                                recipientField.setText("Recipient:");
+                                glass2.getChildren().remove(logDisplay);
+                                glass2.getChildren().add(logDisplay);
                             }
+                        });
+
+                        //create message object
+                        Message newMsg = new Message(MessageType.SENDMESSAGE);
+                        newMsg.setSender(username);
+                        newMsg.setRecipient(sendingTo);
+                        newMsg.setMessage(msg);
+
+                        try {
+                            // set timeSent and write on the output stream
+                            newMsg.setTimeSent(System.currentTimeMillis());
+                            oos.writeObject(newMsg);
+                            oos.flush();
+                            savedMessages.add(newMsg);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
+                    }
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        System.out.println("User disconnected");
+                        e.printStackTrace();
                     }
                 }
             }
@@ -116,28 +134,44 @@ public class ClientGUI extends Application {
         // readMessage thread
         Thread readMessage = new Thread(new Runnable()
         {
-            /**when reuben sends me a message he sends
-             * sendersname#msg
-             */
 
             @Override
             public void run() {
+                Date date;
 
                 while (true) {
                     try {
                         // read the message sent to this client
                         // set time received stamp
-                        Message msgReceived = (Message)ois.readObject();
+                        Message msgReceived = (Message) ois.readObject();
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         savedMessages.add(msgReceived);
+
+                        date = java.util.Calendar.getInstance().getTime();
+                        log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
+                                msgReceived.getRecipient() + " " + msgReceived.getMessage());
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                logDisplay.setText(log.toString());
+                                glass2.getChildren().remove(logDisplay);
+                                glass2.getChildren().add(logDisplay);
+                            }
+                        });
 
                         //Send receipt to server
                         Message receipt = msgReceived;
                         receipt.setType(MessageType.RECEIPT);
                         oos.writeObject(receipt);
+                        oos.reset();
+                        oos.flush();
 
                         //print message received
                         System.out.println(msgReceived.getMessage());
+                        if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
+                            System.out.println("got active users list");
+                        }
 
                     } catch (IOException e) {
 
@@ -149,9 +183,9 @@ public class ClientGUI extends Application {
             }
         });
 
-        System.out.println("goddamnit amber");
         sendMessage.start();
         readMessage.start();
+
         launch(args);
     }
 
@@ -159,7 +193,6 @@ public class ClientGUI extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Chat Server");
 
-        VBox root = new VBox(5);
         root.setPadding(new Insets(10));
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-background-color: lightgray");
@@ -168,16 +201,14 @@ public class ClientGUI extends Application {
         glass.setStyle("-fx-background-color: transparent");
         root.getChildren().add(glass);
 
-        Text logDisplay = new Text(log.toString());
+        logDisplay = new Text(log.toString());
         logDisplay.setWrappingWidth(670);
         logDisplay.setX(15);
         logDisplay.setStroke(Color.WHITE);
 
-        Pane glass2 = new Pane();
         glass2.setStyle("-fx-background-color: transparent");
         glass2.getChildren().add(logDisplay);
 
-        ScrollPane chatBox = new ScrollPane();
         chatBox.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         chatBox.setContent(glass2);
         chatBox.setMaxWidth(700);
@@ -198,6 +229,7 @@ public class ClientGUI extends Application {
         header.setFont(Font.font("Verdana", 16));
 
         names.setStroke(Color.DARKGOLDENROD);
+        names.setText("\n" + username);
         names.setX(7);
         names.setY(72);
         names.setFont(Font.font("Verdana", 13));
@@ -247,7 +279,6 @@ public class ClientGUI extends Application {
             @Override
             public void handle(ActionEvent event) {
                 sendFlag = true;
-                System.out.println(sendFlag);
             }
         });
 
