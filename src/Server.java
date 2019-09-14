@@ -135,11 +135,13 @@ class ClientHandler implements Runnable {
                     case LOGOUT:
                         // Not closing connection to avoid reestablishing a connection for "reconnect"
                         this.isloggedin = false;
+                        System.out.println(this.name + " has logged out");
                         break;
                     case SETNAME:
                         if (checkName(received.getSender())) {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
+                            System.out.println("Sending active users to all clients.");
                             for (ClientHandler mc : Server.ar) {
                                 if (!mc.getName().equals(this.getName())){
                                     mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
@@ -151,12 +153,14 @@ class ClientHandler implements Runnable {
                             this.dos.writeObject(new Message(MessageType.BASIC));
                             this.dos.reset();
                             this.dos.flush();
+                            System.out.println(this.name + " is already in use. Rejecting connection.");
                             quit();
                         }
                         break;
                     case RECONNECT:
                         this.isloggedin = true;
                         // Send stored messages to client
+                        System.out.println(this.name + " has logged back in. Sending stored messages.");
                         while (!queue.isEmpty()) {
                             this.dos.writeObject(queue.remove());
                             this.dos.reset();
@@ -173,17 +177,21 @@ class ClientHandler implements Runnable {
                                 mc.dos.writeObject(received);
                                 mc.dos.reset();
                                 mc.dos.flush();
+                                System.out.println(received.toString());
                                 break;
 
                             } else if (!mc.isloggedin){
                                 // Store messages while client is "logged out"
                                 mc.addMessage(received);
+                                System.out.println(mc.name + " is not logged in. " +
+                                        "Message will send when the user logged back in.");
                             }
                         }
                         break;
                     case QUIT:
                         // Graceful exit
                         quit();
+                        System.out.println(this.name + " has exited chatroom.");
                         break;
                     case RECEIPT:
                         String receipt = received.getTimeSent() + "," + received.getTimeReceived() + "\n";
@@ -221,9 +229,10 @@ class ClientHandler implements Runnable {
 
     private void writeToFile(String str) {
         try {
+            System.out.println("Receipt Received");
             csvWriter.append(str);
             csvWriter.flush();
-            csvWriter.close();
+            System.out.println("Message written to TimeStamp.csv");
         } catch (IOException e) {
             e.printStackTrace();
         }
