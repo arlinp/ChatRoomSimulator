@@ -20,6 +20,7 @@ public class Client {
     private static long timeSent;
     private static long timeReceived;
     private static int clientNum = 0;
+    private static boolean loggedIn = true;
 
     //Saved lists
     private static ArrayList<String> activeUsers = new ArrayList<>();
@@ -69,48 +70,64 @@ public class Client {
 
                         if (!msg.isEmpty()) {
                             Message newMsg;
-                            StringTokenizer tkmsg = new StringTokenizer(msg);
+                            StringTokenizer tkmsg = new StringTokenizer(msg, "#");
                             String command = tkmsg.nextToken();
 
                             // logging out
                             if (command.equalsIgnoreCase("logout")) {
+                                loggedIn = false;
                                 newMsg = new Message(MessageType.LOGOUT);
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
                                 System.out.println("You have logged out");
                             }
-                            //view all active users
-                            if (command.equalsIgnoreCase("active")) {
-                                System.out.println("Here are the active users: ");
-                                for (String user: activeUsers) {
-                                    System.out.println(user);
+                            if (command.equalsIgnoreCase("login")) {
+                                loggedIn = false;
+                                newMsg = new Message(MessageType.LOGIN);
+                                System.out.println("You have logged in " + username);
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                            }
+                            if(loggedIn) {
+                                //view all active users
+                                if (command.equalsIgnoreCase("active")) {
+                                    System.out.println("Here are the active users: ");
+                                    for (String user : activeUsers) {
+                                        System.out.println(user);
+                                    }
                                 }
-                            }
-                            if (command.equalsIgnoreCase("quit")) {
-                                newMsg = new Message(MessageType.QUIT);
-                                oos.writeObject(newMsg);
-                                oos.reset();
-                                oos.flush();
-                            }
-                            //changing your username - send change to server
-                            if (command.equalsIgnoreCase("chgName")) {
-                                username = tkmsg.nextToken();
-                                newMsg = new Message(MessageType.SETNAME);
-                                newMsg.setSender(username);
-                                System.out.println("You changed your name to " + username);
-                                // set timeSent and write on the output stream
-                                newMsg.setTimeSent(System.currentTimeMillis());
-                                oos.writeObject(newMsg);
-                                oos.reset();
-                                oos.flush();
-                                savedMessages.add(newMsg);
-                            } else {
-                                //create message object
-                                sendingTo = command;
-                                newMsg = new Message(MessageType.SENDMESSAGE);
-                                newMsg.setSender(username);
-                                newMsg.setRecipient(sendingTo);
-                                newMsg.setMessage(tkmsg.nextToken());
 
-                                try {
+                                if (command.equalsIgnoreCase("quit")) {
+                                    newMsg = new Message(MessageType.QUIT);
+                                    oos.writeObject(newMsg);
+                                    oos.reset();
+                                    oos.flush();
+                                }
+
+                                // changing your username - send change to server
+                                if (command.equalsIgnoreCase("chgName")) {
+                                    username = tkmsg.nextToken();
+                                    newMsg = new Message(MessageType.SETNAME);
+                                    newMsg.setSender(username);
+
+                                    // set timeSent and write on the output stream
+                                    System.out.println("You changed your name to " + username);
+                                    newMsg.setTimeSent(System.currentTimeMillis());
+                                    oos.writeObject(newMsg);
+                                    oos.reset();
+                                    oos.flush();
+                                    savedMessages.add(newMsg);
+
+                                } else {
+                                    //create message object
+                                    sendingTo = command;
+                                    newMsg = new Message(MessageType.SENDMESSAGE);
+                                    newMsg.setSender(username);
+                                    newMsg.setRecipient(sendingTo);
+                                    newMsg.setMessage(tkmsg.nextToken());
+
                                     // set timeSent and write on the output stream
                                     newMsg.setTimeSent(System.currentTimeMillis());
                                     oos.writeObject(newMsg);
@@ -119,8 +136,6 @@ public class Client {
                                     savedMessages.add(newMsg);
                                     System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
                                             newMsg.getMessage());
-                                } catch (IOException e) {
-                                    e.printStackTrace();
                                 }
                             }
                         }
@@ -142,12 +157,12 @@ public class Client {
                     try {
                         // read the message sent to this client
                         // set time received stamp
-                        Message msgReceived = (Message) ois.readObject();
+                        Message msgReceived = (Message)ois.readObject();
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         savedMessages.add(msgReceived);
 
+                        //print message received
                         date = java.util.Calendar.getInstance().getTime();
-
                         System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
                                 msgReceived.getMessage());
 
@@ -163,11 +178,11 @@ public class Client {
                             System.out.println("received empty message");
                         }
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
+                            activeUsers = msgReceived.getUsers();
                             System.out.println("Received active users list");
                         }
 
                     } catch (IOException e) {
-
                         e.printStackTrace();
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
