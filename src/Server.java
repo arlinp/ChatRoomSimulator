@@ -129,7 +129,7 @@ class ClientHandler implements Runnable {
                 // receive the string
                 received = (Message) dis.readObject();
 
-                System.out.println(received);
+                //System.out.println(received);
 
                 switch (received.getType()) {
                     case LOGOUT:
