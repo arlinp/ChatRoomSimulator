@@ -83,4 +83,9 @@ public class Message implements Serializable {
     public void setTimeReceived(long timeReceived) {
         this.timeReceived = timeReceived;
     }
+
+    @Override
+    public String toString() {
+        return "Sender: " + getSender() + " Recipient: " + getRecipient() + " Message: '" + getMessage() +"'";
+    }
 }
