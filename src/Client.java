@@ -37,7 +37,7 @@ public class Client {
         InetAddress ip = InetAddress.getByName(args[0]);
         ServerPort = Integer.parseInt(args[1]);
         username = args[2];
-//        InetAddress ip = InetAddress.getByName("b146-36");
+//        InetAddress ip = InetAddress.getByName("b146-35");
 //        ServerPort = 1025;
 //        username = "arlin";
 

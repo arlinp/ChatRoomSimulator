@@ -129,8 +129,6 @@ class ClientHandler implements Runnable {
                 // receive the string
                 received = (Message) dis.readObject();
 
-                //System.out.println(received);
-
                 switch (received.getType()) {
                     case LOGOUT:
                         // Not closing connection to avoid reestablishing a connection for "reconnect"
