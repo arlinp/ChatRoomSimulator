@@ -1,7 +1,7 @@
 // Java implementation for multithreaded chat client
 // Command-line Version 1.0
 
-import javafx.scene.text.Text;
+//import javafx.scene.text.Text;
 
 import java.io.*;
 import java.net.*;
@@ -27,19 +27,19 @@ public class Client {
 
     //Display aspects
     public static StringBuilder log = new StringBuilder();
-    private static Text logDisplay = new Text();
+    //private static Text logDisplay = new Text();
 
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         Scanner scn = new Scanner(System.in);
         /**commenting out until I figure out a way separate this from output data stream**/
 
-//        InetAddress ip = InetAddress.getByName(args[0]);
-//        ServerPort = Integer.parseInt(args[1]);
-//        username = args[2];
-        InetAddress ip = InetAddress.getByName("localhost");
-        ServerPort = 1025;
-        username = "arlin";
+        InetAddress ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
+//        InetAddress ip = InetAddress.getByName("b146-36");
+//        ServerPort = 1025;
+//        username = "arlin";
 
 //         getting localhost ip
 //        InetAddress ip = InetAddress.getByName("localhost");
@@ -83,6 +83,12 @@ public class Client {
                                 for (String user: activeUsers) {
                                     System.out.println(user);
                                 }
+                            }
+                            if (command.equalsIgnoreCase("quit")) {
+                                newMsg = new Message(MessageType.QUIT);
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
                             }
                             //changing your username - send change to server
                             if (command.equalsIgnoreCase("chgName")) {
