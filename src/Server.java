@@ -84,6 +84,15 @@ class ClientHandler implements Runnable {
     private Socket s;
     private boolean isloggedin;
     private Queue<Message> queue = new LinkedList<>();
+    private FileWriter csvWriter;
+
+    {
+        try {
+            csvWriter = new FileWriter("timeStamps.csv");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     // constructor
     public ClientHandler(Socket s, String name,
@@ -176,6 +185,10 @@ class ClientHandler implements Runnable {
                         // Graceful exit
                         quit();
                         break;
+                    case RECEIPT:
+                        String receipt = received.getTimeSent() + "," + received.getTimeReceived() + "\n";
+                        writeToFile(receipt);
+                        break;
                 }
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
@@ -204,6 +217,17 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
         }
         Server.ar.remove(this);
+    }
+
+    private void writeToFile(String str) {
+        try {
+            csvWriter.append(str);
+            csvWriter.flush();
+            csvWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
 
