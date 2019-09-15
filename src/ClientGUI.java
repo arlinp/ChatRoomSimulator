@@ -1,7 +1,5 @@
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -21,15 +19,11 @@ import java.util.Date;
 
 import java.io.*;
 import java.net.*;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 
 public class ClientGUI extends Application implements Serializable{
 
-    private static long timeSent;
-    private static long timeReceived;
     private static int ServerPort = 1025;
     private static String username;
     private static InetAddress ip;
@@ -91,7 +85,7 @@ public class ClientGUI extends Application implements Serializable{
                 Message newMsg;
                 while (!quit) {
                     // read the message to deliver.
-                    if (sendFlag) {
+                    if (sendFlag &&  loggedIn) {
                         //messageCount++;
                         date = java.util.Calendar.getInstance().getTime();
                         String msg = textField.getText();
