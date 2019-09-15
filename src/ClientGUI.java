@@ -3,6 +3,7 @@
 //import javafx.beans.value.ChangeListener;
 //import javafx.beans.value.ObservableValue;
 //import javafx.event.ActionEvent;
+//import javafx.event.EventHandler;
 //import javafx.geometry.Insets;
 //import javafx.geometry.Pos;
 //import javafx.scene.Scene;
@@ -48,6 +49,7 @@
 //    private static TextArea textField = new TextArea("Enter text here...");
 //    private static TextField recipientField = new TextField("Recipient:");
 //    private static Text names = new Text(username);
+//
 //
 //    public static void main(String[] args) throws UnknownHostException, IOException {
 //
