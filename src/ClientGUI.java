@@ -92,6 +92,7 @@ public class ClientGUI extends Application implements Serializable{
                             Message newLogin = new Message(MessageType.RECONNECT);
                             newLogin.setSender(username);
                             newLogin.setTimeSent(System.currentTimeMillis());
+
                             try {
                                 oos.writeObject(newLogin);
                                 oos.flush();
@@ -169,62 +170,65 @@ public class ClientGUI extends Application implements Serializable{
                 Date date;
 
                 while (!quit) {
-                    try {
-                        // read the message sent to this client
-                        // set time received stamp
-                        Message msgReceived = (Message) ois.readObject();
-                        msgReceived.setTimeReceived(System.currentTimeMillis());
-                        savedMessages.add(msgReceived);
+                    if(loggedIn) {
+                        try {
+                            // read the message sent to this client
+                            // set time received stamp
+                            Message msgReceived = (Message) ois.readObject();
+                            msgReceived.setTimeReceived(System.currentTimeMillis());
+                            savedMessages.add(msgReceived);
 
-                        date = java.util.Calendar.getInstance().getTime();
+                            date = java.util.Calendar.getInstance().getTime();
 
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                logDisplay.setText(log.toString());
-                                glass2.getChildren().remove(logDisplay);
-                                glass2.getChildren().add(logDisplay);
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    logDisplay.setText(log.toString());
+                                    glass2.getChildren().remove(logDisplay);
+                                    glass2.getChildren().add(logDisplay);
+                                }
+                            });
+
+                            //print message received
+                            if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
+                                activeUsers = msgReceived.getUsers();
+                                System.out.println("Updating active users list");
+                                String newUserList = "";
+                                for (String name : activeUsers) {
+                                    newUserList += (name + "\n");
+                                }
+                                System.out.println(newUserList);
+                                names.setText(newUserList);
                             }
-                        });
 
-                        //print message received
-                        if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
-                            activeUsers = msgReceived.getUsers();
-                            System.out.println("Updating active users list");
-                            String newUserList = "";
-                            for(String name : activeUsers){
-                                newUserList += (name + "\n");
+                            //Send receipt to server
+                            if (msgReceived.getType() == MessageType.SENDMESSAGE) {
+                                Message receipt = msgReceived;
+                                receipt.setType(MessageType.RECEIPT);
+                                oos.writeObject(receipt);
+                                oos.reset();
+                                oos.flush();
+                                log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
+                                        msgReceived.getRecipient() + " " + msgReceived.getMessage());
+
                             }
-                            System.out.println(newUserList);
-                            names.setText(newUserList);
+
+                            //Bad username
+                            if (msgReceived.getType() == MessageType.BASIC) {
+                                System.out.println("Choose a different username");
+                            }
+
+                        } catch (IOException e) {
+
+                            e.printStackTrace();
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
-
-                        //Send receipt to server
-                        if(msgReceived.getType() == MessageType.SENDMESSAGE) {
-                            Message receipt = msgReceived;
-                            receipt.setType(MessageType.RECEIPT);
-                            oos.writeObject(receipt);
-                            oos.reset();
-                            oos.flush();
-                            log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
-                                    msgReceived.getRecipient() + " " + msgReceived.getMessage());
-
-                        }
-
-                        //Bad username
-                        if (msgReceived.getType() == MessageType.BASIC) {
-                            System.out.println("Choose a different username");
-                        }
-
-                    } catch (IOException e) {
-
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
                     }
                 }
             }
         });
+
 
         sendMessage.start();
         readMessage.start();
@@ -338,11 +342,13 @@ public class ClientGUI extends Application implements Serializable{
 //                sendFlag = true;
                 if (buttonConnect.getText().equals("Log In")){
                     buttonConnect.setText("Log Out");
+                    buttonSend.setDisable(false);
                     loggedIn = true;
 
 
                 } else {
                     buttonConnect.setText("Log In");
+                    buttonSend.setDisable(true);
                     loggedIn = false;
 
                 }
