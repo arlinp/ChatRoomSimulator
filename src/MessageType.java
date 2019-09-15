@@ -6,5 +6,6 @@ public enum MessageType {
     BASIC,
     RECEIPT,
     QUIT,
-    ACTIVEUSERS;
+    ACTIVEUSERS,
+    USERSSENT;
 }

@@ -79,8 +79,8 @@ public class Server {
 // ClientHandler class
 class ClientHandler implements Runnable {
     private String name;
-    private ObjectInputStream dis;
-    private ObjectOutputStream dos;
+    public ObjectInputStream dis;
+    public ObjectOutputStream dos;
     private Socket s;
     private boolean isloggedin;
     private Queue<Message> queue = new LinkedList<>();
@@ -89,7 +89,7 @@ class ClientHandler implements Runnable {
 
     {
         try {
-            csvWriter = new FileWriter("timeStamps.csv");
+            csvWriter = new FileWriter("timeStamps.csv", true);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -141,13 +141,13 @@ class ClientHandler implements Runnable {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
                             System.out.println("Sending active users to all clients.");
-                            //for (ClientHandler mc : Server.ar) {
-//                                if (!mc.getName().equals(this.getName())){
-//                                    mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
-//                                    mc.dos.reset();
-//                                    mc.dos.flush();
-//                                }
-                            //}
+//                            for (ClientHandler mc : Server.ar) {
+//                                Message users = new Message(MessageType.ACTIVEUSERS, Server.userNames);
+//                                mc.dos.writeObject(users);
+//                                this.wait(10);
+//                                mc.dos.reset();
+//                                mc.dos.flush();
+//                            }
                         } else {
                             this.dos.writeObject(new Message(MessageType.BASIC));
                             this.dos.reset();
@@ -171,13 +171,12 @@ class ClientHandler implements Runnable {
                             // if the recipient is found, write on its
                             // output stream
                             if (received.getRecipient().equalsIgnoreCase("all") ||
-                                    mc.getName().equals(received.getRecipient()) && mc.isloggedin) {
+                                    (mc.getName().equals(received.getRecipient()) && mc.isloggedin)) {
                                 // Need to update client to handle message object
                                 mc.dos.writeObject(received);
                                 mc.dos.reset();
                                 mc.dos.flush();
                                 System.out.println(received.toString());
-                                break;
 
                             } else if (!mc.isloggedin){
                                 // Store messages while client is "logged out"
@@ -194,6 +193,7 @@ class ClientHandler implements Runnable {
                         break;
                     case RECEIPT:
                         String receipt = received.getTimeSent() + "," + received.getTimeReceived() + "\n";
+                        System.out.println("Receipt = " + receipt);
                         writeToFile(receipt);
                         break;
                 }
@@ -234,6 +234,7 @@ class ClientHandler implements Runnable {
             csvWriter.append(str);
             csvWriter.flush();
             System.out.println("Message written to TimeStamp.csv");
+
         } catch (IOException e) {
             e.printStackTrace();
         }

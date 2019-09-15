@@ -65,7 +65,6 @@ public class ClientReceiver {
                         oos.reset();
                         oos.flush();
                         quit = true;
-                        System.out.println("Quitting Receiver: " + username);
                     }
 
                     if (msgReceived.getType() == MessageType.ACTIVEUSERS) {
@@ -82,11 +81,7 @@ public class ClientReceiver {
             }
         });
         readMessage.start();
-        if(quit){
-            readMessage.stop();
-            System.out.println("Exiting Receiver: " + username);
-            System.exit(0);
-        }
+        if (quit) {System.exit(0);}
     }
 
 
