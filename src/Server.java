@@ -141,11 +141,13 @@ class ClientHandler implements Runnable {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
                             System.out.println("Sending active users to all clients.");
-                            for (ClientHandler mc : Server.ar) {
-                                mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
-                                mc.dos.reset();
-                                mc.dos.flush();
-                            }
+                            //for (ClientHandler mc : Server.ar) {
+//                                if (!mc.getName().equals(this.getName())){
+//                                    mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
+//                                    mc.dos.reset();
+//                                    mc.dos.flush();
+//                                }
+                            //}
                         } else {
                             this.dos.writeObject(new Message(MessageType.BASIC));
                             this.dos.reset();
@@ -197,6 +199,7 @@ class ClientHandler implements Runnable {
                 }
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
     }

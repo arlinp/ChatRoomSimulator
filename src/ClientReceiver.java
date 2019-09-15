@@ -60,13 +60,12 @@ public class ClientReceiver {
                         oos.flush();
                         System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " + " " +
                                 msgReceived.getMessage());
-                        quit = true;
                         msgReceived.setType(MessageType.QUIT);
                         oos.writeObject(msgReceived);
                         oos.reset();
                         oos.flush();
                         quit = true;
-                        System.exit(0);
+                        System.out.println("Quitting Receiver: " + username);
                     }
 
                     if (msgReceived.getType() == MessageType.ACTIVEUSERS) {
@@ -83,6 +82,11 @@ public class ClientReceiver {
             }
         });
         readMessage.start();
+        if(quit){
+            readMessage.stop();
+            System.out.println("Exiting Receiver: " + username);
+            System.exit(0);
+        }
     }
 
 
