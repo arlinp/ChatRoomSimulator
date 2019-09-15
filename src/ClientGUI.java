@@ -35,6 +35,9 @@ public class ClientGUI extends Application implements Serializable{
     private static InetAddress ip;
     private static boolean sendFlag = false;
     private static boolean quit = false;
+    private static double y;
+    private static boolean loggedIn;
+    private static boolean logFlag;
 
     //Saved lists
     private static ArrayList<String> activeUsers;
@@ -55,14 +58,12 @@ public class ClientGUI extends Application implements Serializable{
 
         /**commenting out until I figure out a way separate this from output data stream**/
 
-        username = "Candid";
-
-//        ip = InetAddress.getByName(args[0]);
-        //       ServerPort = Integer.parseInt(args[1]);
-        //       username = args[2];
+        ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
 
 //         getting localhost ip
-        InetAddress ip = InetAddress.getByName("localhost");
+//        InetAddress ip = InetAddress.getByName("localhost");
 
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
@@ -85,6 +86,7 @@ public class ClientGUI extends Application implements Serializable{
             @Override
             public void run() {
                 Date date;
+                Message newMsg;
                 while (!quit) {
                     // read the message to deliver.
                     if (sendFlag) {
@@ -106,7 +108,7 @@ public class ClientGUI extends Application implements Serializable{
                         });
 
                         //create message object
-                        Message newMsg = new Message(MessageType.SENDMESSAGE);
+                        newMsg = new Message(MessageType.SENDMESSAGE);
                         newMsg.setSender(username);
                         newMsg.setRecipient(sendingTo.toLowerCase());
                         newMsg.setMessage(msg);
@@ -123,11 +125,42 @@ public class ClientGUI extends Application implements Serializable{
                             e.printStackTrace();
                         }
                     }
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        System.out.println("User disconnected");
-                        e.printStackTrace();
+                    if (logFlag) {
+                        if (loggedIn = true) {
+                            loggedIn = false;
+                            logFlag = false;
+                            newMsg = new Message(MessageType.LOGOUT);
+                            System.out.println("You have logged out");
+
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                                savedMessages.add(newMsg);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (loggedIn = false) {
+                            loggedIn = true;
+                            logFlag = false;
+                            newMsg = new Message(MessageType.RECONNECT);
+                            System.out.println("You have logged in " + username);
+                            try {
+                                // set timeSent and write on the output stream
+                                newMsg.setTimeSent(System.currentTimeMillis());
+                                oos.writeObject(newMsg);
+                                oos.reset();
+                                oos.flush();
+                                savedMessages.add(newMsg);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }
             }
@@ -150,17 +183,6 @@ public class ClientGUI extends Application implements Serializable{
                         savedMessages.add(msgReceived);
 
                         date = java.util.Calendar.getInstance().getTime();
-                        log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
-                                msgReceived.getRecipient() + " " + msgReceived.getMessage());
-
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                logDisplay.setText(log.toString());
-                                glass2.getChildren().remove(logDisplay);
-                                glass2.getChildren().add(logDisplay);
-                            }
-                        });
 
                         //print message received
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
@@ -168,14 +190,17 @@ public class ClientGUI extends Application implements Serializable{
                             System.out.println("Updating active users list");
                             String newUserList = "";
                             for(String name : activeUsers){
-                                 newUserList += (name + "\n");
+                                newUserList += ("\n" + name);
                             }
-                            System.out.println(newUserList);
                             names.setText(newUserList);
+                            names.setY(y);
+                            names.setX(7);
                         }
 
                         //Send receipt to server
                         if(msgReceived.getType() == MessageType.SENDMESSAGE) {
+                            log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
+                                    msgReceived.getRecipient() + " " + msgReceived.getMessage());
                             Message receipt = msgReceived;
                             receipt.setType(MessageType.RECEIPT);
                             oos.writeObject(receipt);
@@ -185,8 +210,17 @@ public class ClientGUI extends Application implements Serializable{
 
                         //Bad username
                         if (msgReceived.getType() == MessageType.BASIC) {
-                            System.out.println("Choose a different username");
+                            log.append("Your username is invalid.  Please reconnect.");
                         }
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                logDisplay.setText(log.toString());
+                                glass2.getChildren().remove(logDisplay);
+                                glass2.getChildren().add(logDisplay);
+                            }
+                        });
 
                     } catch (IOException e) {
 
@@ -248,6 +282,7 @@ public class ClientGUI extends Application implements Serializable{
         names.setX(7);
         names.setY(header.getY() + 80);
         names.setFont(Font.font("Verdana", 13));
+        y = header.getY() + 80;
 
         root.getChildren().addAll(header);
         glass.getChildren().add(names);
@@ -286,7 +321,7 @@ public class ClientGUI extends Application implements Serializable{
 
         Button buttonSend = new Button("Send");
         buttonSend.setTranslateX(-342);
-        buttonSend.setTranslateY(-67);
+        buttonSend.setTranslateY(-65);
         buttonSend.setStyle("-fx-control-inner-background: grey; -fx-background-color: grey;"
                 + "-fx-text-fill: black;");
         buttonSend.setOnAction(new EventHandler<ActionEvent>() {
@@ -297,9 +332,30 @@ public class ClientGUI extends Application implements Serializable{
             }
         });
 
+        loggedIn = true;
+        Button buttonConnect = new Button("Log Out");
+        buttonConnect.setLayoutX(15);
+        buttonConnect.setLayoutY(476);
+        buttonConnect.setStyle("-fx-control-inner-background: grey; -fx-background-color: grey;"
+                + "-fx-text-fill: black;");
+        buttonConnect.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                sendFlag = true;
+                if (buttonConnect.getText().equals("Log In")){
+                    buttonConnect.setText("Log Out");
+                } else {
+                    buttonConnect.setText("Log In");
+                }
+                logFlag = true;
+            }
+        });
+
         root.setPadding(new Insets(10));
 
         root.getChildren().addAll(textField, recipientField, buttonClear, buttonSend);
+        glass.getChildren().add(buttonConnect);
 
         primaryStage.setWidth(900);
         primaryStage.setHeight(600);
