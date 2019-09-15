@@ -1,5 +1,7 @@
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -19,11 +21,15 @@ import java.util.Date;
 
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 
 public class ClientGUI extends Application implements Serializable{
 
+    private static long timeSent;
+    private static long timeReceived;
     private static int ServerPort = 1025;
     private static String username;
     private static InetAddress ip;
@@ -52,14 +58,12 @@ public class ClientGUI extends Application implements Serializable{
 
         /**commenting out until I figure out a way separate this from output data stream**/
 
-        username = "Candid";
-
-//        ip = InetAddress.getByName(args[0]);
-        //       ServerPort = Integer.parseInt(args[1]);
-        //       username = args[2];
+        ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
 
 //         getting localhost ip
-        InetAddress ip = InetAddress.getByName("localhost");
+//        InetAddress ip = InetAddress.getByName("localhost");
 
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
@@ -85,7 +89,7 @@ public class ClientGUI extends Application implements Serializable{
                 Message newMsg;
                 while (!quit) {
                     // read the message to deliver.
-                    if (sendFlag &&  loggedIn) {
+                    if (sendFlag) {
                         //messageCount++;
                         date = java.util.Calendar.getInstance().getTime();
                         String msg = textField.getText();
