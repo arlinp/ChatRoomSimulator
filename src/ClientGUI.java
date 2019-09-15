@@ -35,6 +35,8 @@ public class ClientGUI extends Application implements Serializable{
     private static InetAddress ip;
     private static boolean sendFlag = false;
     private static boolean quit = false;
+    private static boolean loggedIn = true;
+    private static boolean logMessage = false;
 
     //Saved lists
     private static ArrayList<String> activeUsers;
@@ -87,7 +89,20 @@ public class ClientGUI extends Application implements Serializable{
                 Date date;
                 while (!quit) {
                     // read the message to deliver.
-                    if (sendFlag) {
+                    if (sendFlag && loggedIn) {
+                        if(logMessage){
+                            Message newLogin = new Message(MessageType.RECONNECT);
+                            newLogin.setSender(username);
+                            newLogin.setTimeSent(System.currentTimeMillis());
+                            try {
+                                oos.writeObject(newLogin);
+                                oos.flush();
+                                oos.reset();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            logMessage = false;
+                        }
                         //messageCount++;
                         date = java.util.Calendar.getInstance().getTime();
                         String msg = textField.getText();
@@ -123,6 +138,20 @@ public class ClientGUI extends Application implements Serializable{
                             e.printStackTrace();
                         }
                     }
+                    else if(!loggedIn && logMessage){
+                        Message newLogin = new Message(MessageType.LOGOUT);
+                        newLogin.setSender(username);
+                        newLogin.setTimeSent(System.currentTimeMillis());
+                        try {
+                            oos.writeObject(newLogin);
+                            oos.flush();
+                            oos.reset();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        logMessage = false;
+                    }
+
                     try {
                         Thread.sleep(1);
                     } catch (InterruptedException e) {
@@ -295,12 +324,42 @@ public class ClientGUI extends Application implements Serializable{
             @Override
             public void handle(ActionEvent event) {
                 sendFlag = true;
+                logMessage = true;
             }
         });
+
+        Button buttonConnect = new Button("Log Out");
+        buttonConnect.setLayoutX(15);
+        buttonConnect.setLayoutY(476);
+        buttonConnect.setStyle("-fx-control-inner-background: grey; -fx-background-color: grey;"
+                + "-fx-text-fill: black;");
+        buttonConnect.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+//                sendFlag = true;
+                if (buttonConnect.getText().equals("Log In")){
+                    buttonConnect.setText("Log Out");
+                    loggedIn = true;
+
+
+                } else {
+                    buttonConnect.setText("Log In");
+                    loggedIn = false;
+
+                }
+                logMessage = true;
+//                logFlag = true;
+            }
+        });
+
+        glass.getChildren().add(buttonConnect);
+
 
         root.setPadding(new Insets(10));
 
         root.getChildren().addAll(textField, recipientField, buttonClear, buttonSend);
+
 
         primaryStage.setWidth(900);
         primaryStage.setHeight(600);
