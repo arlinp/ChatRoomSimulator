@@ -1,6 +1,4 @@
 
-
-
 #
 # define compiler and compiler flag variables
 #
@@ -33,8 +31,7 @@ JC = javac
 # Remember that there must be a < tab > before the command line ('rule')
 #
 
-.java.class:
-        $(JC) $(JFLAGS) $*.java
+.java.class: ; $(JC) $(JFLAGS) $*.java
 
 
 #
@@ -42,10 +39,10 @@ JC = javac
 #
 
 CLASSES = \
-        Client.java \
-        Message.java \
-        MessageType.java \
-        Server.java
+    Client.java\
+    Message.java\
+    MessageType.java\
+    Server.java
 
 
 #
@@ -70,5 +67,4 @@ classes: $(CLASSES:.java=.class)
 # RM is a predefined macro in make (RM = rm -f)
 #
 
-clean:
-        $(RM) *.class
+clean: ; $(RM) *.class
