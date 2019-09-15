@@ -21,25 +21,22 @@ public class Client {
     private static long timeReceived;
     private static int clientNum = 0;
     private static boolean loggedIn = true;
+    private static boolean quit = false;
 
     //Saved lists
     private static ArrayList<String> activeUsers;
     private static ArrayList<Message> savedMessages = new ArrayList<>();
 
-    //Display aspects
-    public static StringBuilder log = new StringBuilder();
-    //private static Text logDisplay = new Text();
-
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         Scanner scn = new Scanner(System.in);
 
-//        InetAddress ip = InetAddress.getByName(args[0]);
-//        ServerPort = Integer.parseInt(args[1]);
-//        username = args[2];
-        InetAddress ip = InetAddress.getByName("localhost");
-        ServerPort = 1025;
-        username = "arlin";
+        InetAddress ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
+//        InetAddress ip = InetAddress.getByName("localhost");
+//        ServerPort = 1025;
+//        username = "arlin";
 
 //         getting localhost ip
 //        InetAddress ip = InetAddress.getByName("localhost");
@@ -57,12 +54,11 @@ public class Client {
         oos.reset();
         oos.flush();
 
-
         // sendMessage thread
         Thread sendMessage = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (!quit) {
                     try {
                         // read the message to deliver.
                         String msg = scn.nextLine();
@@ -93,14 +89,14 @@ public class Client {
                                 //view all active users
                                 if (command.equalsIgnoreCase("activeUsers")) {
                                     System.out.println("Here are the active users: ");
-
-                                    if(activeUsers.isEmpty()) {
-                                        System.out.println("no users");}
-                                    else {
+//
+//                                    if(activeUsers.isEmpty()) {
+//                                        System.out.println("no users");}
+//                                    else {
                                         for (String user : activeUsers) {
                                             System.out.println(user);
                                         }
-                                    }
+//                                    }
                                 }
 
                                 else if (command.equalsIgnoreCase("quit")) {
@@ -108,6 +104,8 @@ public class Client {
                                     oos.writeObject(newMsg);
                                     oos.reset();
                                     oos.flush();
+                                    quit = true;
+                                    System.exit(0);
                                 }
 
                                 // changing your username - send change to server
@@ -161,7 +159,7 @@ public class Client {
                 Date date;
                 Message msgReceived;
 
-                while (true) {
+                while (!quit) {
                     try {
                         // read the message sent to this client
                         // set time received stamp
@@ -189,7 +187,7 @@ public class Client {
                         if (msgReceived.getType() == MessageType.ACTIVEUSERS) {
                             System.out.println("Received active users list");
                             activeUsers = (ArrayList<String>)msgReceived.getUsers();
-                            System.out.println(msgReceived.getType());
+                            System.out.println(activeUsers.size());
                         }
 
                         //print message received
