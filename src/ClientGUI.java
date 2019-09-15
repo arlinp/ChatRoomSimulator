@@ -150,8 +150,6 @@ public class ClientGUI extends Application implements Serializable{
                         savedMessages.add(msgReceived);
 
                         date = java.util.Calendar.getInstance().getTime();
-                        log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
-                                msgReceived.getRecipient() + " " + msgReceived.getMessage());
 
                         Platform.runLater(new Runnable() {
                             @Override
@@ -181,6 +179,9 @@ public class ClientGUI extends Application implements Serializable{
                             oos.writeObject(receipt);
                             oos.reset();
                             oos.flush();
+                            log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
+                                    msgReceived.getRecipient() + " " + msgReceived.getMessage());
+
                         }
 
                         //Bad username
