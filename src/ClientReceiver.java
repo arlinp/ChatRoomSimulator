@@ -65,6 +65,7 @@ public class ClientReceiver {
                         oos.writeObject(msgReceived);
                         oos.reset();
                         oos.flush();
+                        quit = true;
                         System.exit(0);
                     }
 
