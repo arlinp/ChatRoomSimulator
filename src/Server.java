@@ -85,6 +85,7 @@ class ClientHandler implements Runnable {
     private boolean isloggedin;
     private Queue<Message> queue = new LinkedList<>();
     private FileWriter csvWriter;
+    private boolean quit = false;
 
     {
         try {
@@ -124,7 +125,7 @@ class ClientHandler implements Runnable {
     public void run() {
 
         Message received;
-        while (true) {
+        while (!quit) {
             try {
                 // receive the string
                 received = (Message) dis.readObject();
@@ -221,6 +222,7 @@ class ClientHandler implements Runnable {
             this.dis.close();
             this.dos.close();
             this.s.close();
+            quit = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
