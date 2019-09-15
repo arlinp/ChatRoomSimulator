@@ -79,7 +79,7 @@ public class Client {
                             }
                             if (command.equalsIgnoreCase("login")) {
                                 loggedIn = true;
-                                newMsg = new Message(MessageType.LOGIN);
+                                newMsg = new Message(MessageType.RECONNECT);
                                 System.out.println("You have logged in " + username);
                                 oos.writeObject(newMsg);
                                 oos.reset();
@@ -162,17 +162,13 @@ public class Client {
                 while (!quit) {
                     try {
                         // read the message sent to this client
-                        // set time received stamp
                         msgReceived = (Message)ois.readObject();
-                        System.out.println(msgReceived.getType());
 
+                        // set time received stamp
                         msgReceived.setTimeReceived(System.currentTimeMillis());
-                        //savedMessages.add(msgReceived);
 
                         //print message received
                         date = java.util.Calendar.getInstance().getTime();
-                        System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
-                                msgReceived.getMessage());
 
 
                         //Send receipt to server
@@ -182,13 +178,18 @@ public class Client {
                             oos.writeObject(receipt);
                             oos.reset();
                             oos.flush();
+                            System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
+                                    msgReceived.getMessage());
                         }
 
                         if (msgReceived.getType() == MessageType.ACTIVEUSERS) {
-                            System.out.println("Received active users list");
                             activeUsers = (ArrayList<String>)msgReceived.getUsers();
-                            System.out.println(activeUsers.size());
                         }
+
+                        if (msgReceived.getType() == MessageType.BASIC) {
+                            System.out.println("Choose a different username");
+                        }
+
 
                         //print message received
                         if (msgReceived == null) {
