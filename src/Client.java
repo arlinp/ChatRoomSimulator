@@ -31,12 +31,12 @@ public class Client {
 
         Scanner scn = new Scanner(System.in);
 
-//        InetAddress ip = InetAddress.getByName(args[0]);
-//        ServerPort = Integer.parseInt(args[1]);
-//        username = args[2];
-        InetAddress ip = InetAddress.getByName("localhost");
-        ServerPort = 1025;
-        username = "arlin";
+        InetAddress ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
+//        InetAddress ip = InetAddress.getByName("localhost");
+//        ServerPort = 1025;
+//        username = "arlin2";
 
 //         getting localhost ip
 //        InetAddress ip = InetAddress.getByName("localhost");

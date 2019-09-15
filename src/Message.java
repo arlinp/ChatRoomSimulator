@@ -30,7 +30,6 @@ public class Message implements Serializable {
     public Message(MessageType type, ArrayList<String> users) {
         this.type = type;
         this.users = (ArrayList<String>)users;
-        System.out.println(this.users);
     }
 
     public ArrayList<String> getUsers() {
