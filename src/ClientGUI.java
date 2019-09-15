@@ -35,6 +35,7 @@ public class ClientGUI extends Application implements Serializable{
     private static InetAddress ip;
     private static boolean sendFlag = false;
     private static boolean quit = false;
+    private static double y;
     private static boolean loggedIn = true;
     private static boolean logMessage = false;
 
@@ -180,6 +181,35 @@ public class ClientGUI extends Application implements Serializable{
 
                             date = java.util.Calendar.getInstance().getTime();
 
+                            //print message received
+                            if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
+                                activeUsers = msgReceived.getUsers();
+                                System.out.println("Updating active users list");
+                                String newUserList = "";
+                                for(String name : activeUsers){
+                                    newUserList += ("\n" + name);
+                                }
+                                names.setText(newUserList);
+                                names.setY(y);
+                                names.setX(7);
+                            }
+
+                            //Send receipt to server
+                            if(msgReceived.getType() == MessageType.SENDMESSAGE) {
+                                log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
+                                        msgReceived.getRecipient() + " " + msgReceived.getMessage());
+                                Message receipt = msgReceived;
+                                receipt.setType(MessageType.RECEIPT);
+                                oos.writeObject(receipt);
+                                oos.reset();
+                                oos.flush();
+                            }
+
+                            //Bad username
+                            if (msgReceived.getType() == MessageType.BASIC) {
+                                log.append("Your username is invalid.  Please reconnect.");
+                            }
+
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -188,35 +218,6 @@ public class ClientGUI extends Application implements Serializable{
                                     glass2.getChildren().add(logDisplay);
                                 }
                             });
-
-                            //print message received
-                            if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
-                                activeUsers = msgReceived.getUsers();
-                                System.out.println("Updating active users list");
-                                String newUserList = "";
-                                for (String name : activeUsers) {
-                                    newUserList += (name + "\n");
-                                }
-                                System.out.println(newUserList);
-                                names.setText(newUserList);
-                            }
-
-                            //Send receipt to server
-                            if (msgReceived.getType() == MessageType.SENDMESSAGE) {
-                                Message receipt = msgReceived;
-                                receipt.setType(MessageType.RECEIPT);
-                                oos.writeObject(receipt);
-                                oos.reset();
-                                oos.flush();
-                                log.append("\n" + date + " " + msgReceived.getSender() + ": " + "@" +
-                                        msgReceived.getRecipient() + " " + msgReceived.getMessage());
-
-                            }
-
-                            //Bad username
-                            if (msgReceived.getType() == MessageType.BASIC) {
-                                System.out.println("Choose a different username");
-                            }
 
                         } catch (IOException e) {
 
@@ -280,6 +281,7 @@ public class ClientGUI extends Application implements Serializable{
         names.setX(7);
         names.setY(header.getY() + 80);
         names.setFont(Font.font("Verdana", 13));
+        y = header.getY() + 80;
 
         root.getChildren().addAll(header);
         glass.getChildren().add(names);
