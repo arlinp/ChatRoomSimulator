@@ -58,7 +58,7 @@ public class Client {
         Thread sendMessage = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!quit) {
+                while (!quit && scn.hasNextLine()) {
                     try {
                         // read the message to deliver.
                         String msg = scn.nextLine();
@@ -148,6 +148,7 @@ public class Client {
                     }
                     catch (IOException e) {
                         e.printStackTrace();
+                        System.exit(1);
                     }
                 }
             }
@@ -199,10 +200,9 @@ public class Client {
 
 
 
-                    } catch (IOException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                        System.exit(0);
                     }
                 }
             }
