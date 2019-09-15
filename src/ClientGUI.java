@@ -246,7 +246,7 @@ public class ClientGUI extends Application implements Serializable{
         names.setStroke(Color.DARKGOLDENROD);
         names.setText("\n" + username);
         names.setX(7);
-        names.setY(72);
+        names.setY(header.getY() + 80);
         names.setFont(Font.font("Verdana", 13));
 
         root.getChildren().addAll(header);
