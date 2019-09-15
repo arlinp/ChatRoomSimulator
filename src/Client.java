@@ -23,7 +23,7 @@ public class Client {
     private static boolean loggedIn = true;
 
     //Saved lists
-    private static ArrayList<String> activeUsers = new ArrayList<>();
+    private static transient ArrayList<String> activeUsers;
     private static ArrayList<Message> savedMessages = new ArrayList<>();
 
     //Display aspects
@@ -33,14 +33,13 @@ public class Client {
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         Scanner scn = new Scanner(System.in);
-        /**commenting out until I figure out a way separate this from output data stream**/
 
-        InetAddress ip = InetAddress.getByName(args[0]);
-        ServerPort = Integer.parseInt(args[1]);
-        username = args[2];
-//        InetAddress ip = InetAddress.getByName("b146-36");
-//        ServerPort = 1025;
-//        username = "arlin";
+//        InetAddress ip = InetAddress.getByName(args[0]);
+//        ServerPort = Integer.parseInt(args[1]);
+//        username = args[2];
+        InetAddress ip = InetAddress.getByName("localhost");
+        ServerPort = 1025;
+        username = "arlin";
 
 //         getting localhost ip
 //        InetAddress ip = InetAddress.getByName("localhost");
@@ -92,14 +91,14 @@ public class Client {
                             }
                             if(loggedIn) {
                                 //view all active users
-                                if (command.equalsIgnoreCase("active")) {
+                                if (command.equalsIgnoreCase("activeUsers")) {
                                     System.out.println("Here are the active users: ");
                                     for (String user : activeUsers) {
                                         System.out.println(user);
                                     }
                                 }
 
-                                if (command.equalsIgnoreCase("quit")) {
+                                else if (command.equalsIgnoreCase("quit")) {
                                     newMsg = new Message(MessageType.QUIT);
                                     oos.writeObject(newMsg);
                                     oos.reset();
@@ -107,7 +106,7 @@ public class Client {
                                 }
 
                                 // changing your username - send change to server
-                                if (command.equalsIgnoreCase("chgName")) {
+                                else if (command.equalsIgnoreCase("chgName")) {
                                     username = tkmsg.nextToken();
                                     newMsg = new Message(MessageType.SETNAME);
                                     newMsg.setSender(username);
@@ -158,29 +157,37 @@ public class Client {
                         // read the message sent to this client
                         // set time received stamp
                         Message msgReceived = (Message)ois.readObject();
+
                         msgReceived.setTimeReceived(System.currentTimeMillis());
-                        savedMessages.add(msgReceived);
+                        //savedMessages.add(msgReceived);
 
                         //print message received
                         date = java.util.Calendar.getInstance().getTime();
                         System.out.println("RECEIVED: " + date + " " + "From: @" + msgReceived.getSender() + ": " +  " " +
                                 msgReceived.getMessage());
 
+
                         //Send receipt to server
-                        Message receipt = msgReceived;
-                        receipt.setType(MessageType.RECEIPT);
-                        oos.writeObject(receipt);
-                        oos.reset();
-                        oos.flush();
+                        if(msgReceived.getType() == MessageType.SENDMESSAGE) {
+                            Message receipt = msgReceived;
+                            receipt.setType(MessageType.RECEIPT);
+                            oos.writeObject(receipt);
+                            oos.reset();
+                            oos.flush();
+                        }
+
+                        if (msgReceived.getType() == MessageType.ACTIVEUSERS) {
+                            System.out.println("Received active users list");
+                            activeUsers = (ArrayList<String>)msgReceived.getUsers();
+                            System.out.println(msgReceived.getType());
+                        }
 
                         //print message received
                         if (msgReceived == null) {
                             System.out.println("received empty message");
                         }
-                        if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
-                            activeUsers = msgReceived.getUsers();
-                            System.out.println("Received active users list");
-                        }
+
+
 
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -8,7 +8,7 @@ public class Message implements Serializable {
     private String message;
     private long timeSent;
     private long timeReceived;
-    private transient ArrayList<String> users;
+    private ArrayList<String> users;
 
     public Message(MessageType type){
         this.type = type;
@@ -29,7 +29,8 @@ public class Message implements Serializable {
 
     public Message(MessageType type, ArrayList<String> users) {
         this.type = type;
-        this.users = users;
+        this.users = (ArrayList<String>)users;
+        System.out.println(this.users.size());
     }
 
     public ArrayList<String> getUsers() {
