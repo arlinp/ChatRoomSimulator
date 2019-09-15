@@ -3,6 +3,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -32,10 +33,11 @@ public class ClientGUI extends Application implements Serializable{
     private static int ServerPort = 1025;
     private static String username;
     private static InetAddress ip;
-    private static Boolean sendFlag = false;
+    private static boolean sendFlag = false;
+    private static boolean quit = false;
 
     //Saved lists
-    private static ArrayList<String> activeUsers = new ArrayList<>();
+    private static ArrayList<String> activeUsers;
     private static StringBuilder log = new StringBuilder();
     private static ArrayList<Message> savedMessages = new ArrayList<>();
 
@@ -68,8 +70,9 @@ public class ClientGUI extends Application implements Serializable{
         ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
         ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
 
-        Message hello = new Message(MessageType.SETNAME, username);
+        Message hello = new Message(MessageType.SETNAME, username.toLowerCase());
         oos.writeObject(hello);
+        oos.reset();
         oos.flush();
 
 
@@ -82,13 +85,13 @@ public class ClientGUI extends Application implements Serializable{
             @Override
             public void run() {
                 Date date;
-                while (true) {
+                while (!quit) {
                     // read the message to deliver.
                     if (sendFlag) {
                         //messageCount++;
                         date = java.util.Calendar.getInstance().getTime();
                         String msg = textField.getText();
-                        sendingTo = recipientField.getText();
+                        sendingTo = recipientField.getText().toLowerCase();
                         log.append("\n" + date + " " + username + ": " + "@" + sendingTo + " " + msg);
                         sendFlag = false;
                         Platform.runLater(new Runnable() {
@@ -105,13 +108,14 @@ public class ClientGUI extends Application implements Serializable{
                         //create message object
                         Message newMsg = new Message(MessageType.SENDMESSAGE);
                         newMsg.setSender(username);
-                        newMsg.setRecipient(sendingTo);
+                        newMsg.setRecipient(sendingTo.toLowerCase());
                         newMsg.setMessage(msg);
 
                         try {
                             // set timeSent and write on the output stream
                             newMsg.setTimeSent(System.currentTimeMillis());
                             oos.writeObject(newMsg);
+                            oos.reset();
                             oos.flush();
                             savedMessages.add(newMsg);
 
@@ -137,7 +141,7 @@ public class ClientGUI extends Application implements Serializable{
             public void run() {
                 Date date;
 
-                while (true) {
+                while (!quit) {
                     try {
                         // read the message sent to this client
                         // set time received stamp
@@ -158,17 +162,30 @@ public class ClientGUI extends Application implements Serializable{
                             }
                         });
 
-                        //Send receipt to server
-                        Message receipt = msgReceived;
-                        receipt.setType(MessageType.RECEIPT);
-                        oos.writeObject(receipt);
-                        oos.reset();
-                        oos.flush();
-
                         //print message received
-                        System.out.println(msgReceived.getMessage());
                         if (msgReceived.getType().equals(MessageType.ACTIVEUSERS)) {
-                            System.out.println("got active users list");
+                            activeUsers = msgReceived.getUsers();
+                            System.out.println("Updating active users list");
+                            String newUserList = "";
+                            for(String name : activeUsers){
+                                 newUserList += (name + "\n");
+                            }
+                            System.out.println(newUserList);
+                            names.setText(newUserList);
+                        }
+
+                        //Send receipt to server
+                        if(msgReceived.getType() == MessageType.SENDMESSAGE) {
+                            Message receipt = msgReceived;
+                            receipt.setType(MessageType.RECEIPT);
+                            oos.writeObject(receipt);
+                            oos.reset();
+                            oos.flush();
+                        }
+
+                        //Bad username
+                        if (msgReceived.getType() == MessageType.BASIC) {
+                            System.out.println("Choose a different username");
                         }
 
                     } catch (IOException e) {
@@ -229,7 +246,7 @@ public class ClientGUI extends Application implements Serializable{
         names.setStroke(Color.DARKGOLDENROD);
         names.setText("\n" + username);
         names.setX(7);
-        names.setY(72);
+        names.setY(header.getY() + 80);
         names.setFont(Font.font("Verdana", 13));
 
         root.getChildren().addAll(header);
@@ -268,8 +285,8 @@ public class ClientGUI extends Application implements Serializable{
         });
 
         Button buttonSend = new Button("Send");
-        buttonSend.setTranslateX(-345);
-        buttonSend.setTranslateY(-65);
+        buttonSend.setTranslateX(-342);
+        buttonSend.setTranslateY(-67);
         buttonSend.setStyle("-fx-control-inner-background: grey; -fx-background-color: grey;"
                 + "-fx-text-fill: black;");
         buttonSend.setOnAction(new EventHandler<ActionEvent>() {

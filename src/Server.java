@@ -142,11 +142,9 @@ class ClientHandler implements Runnable {
                             Server.userNames.add(received.getSender());
                             System.out.println("Sending active users to all clients.");
                             for (ClientHandler mc : Server.ar) {
-                                if (!mc.getName().equals(this.getName())){
-                                    mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
-                                    mc.dos.reset();
-                                    mc.dos.flush();
-                                }
+                                mc.dos.writeObject(new Message(MessageType.ACTIVEUSERS, Server.userNames));
+                                mc.dos.reset();
+                                mc.dos.flush();
                             }
                         } else {
                             this.dos.writeObject(new Message(MessageType.BASIC));

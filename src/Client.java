@@ -24,19 +24,19 @@ public class Client {
     private static boolean quit = false;
 
     //Saved lists
-    private static ArrayList<String> activeUsers;
+    private static ArrayList<String> activeUsers = new ArrayList<>();
     private static ArrayList<Message> savedMessages = new ArrayList<>();
 
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         Scanner scn = new Scanner(System.in);
 
-        InetAddress ip = InetAddress.getByName(args[0]);
-        ServerPort = Integer.parseInt(args[1]);
-        username = args[2];
-//        InetAddress ip = InetAddress.getByName("localhost");
-//        ServerPort = 1025;
-//        username = "arlin";
+//        InetAddress ip = InetAddress.getByName(args[0]);
+//        ServerPort = Integer.parseInt(args[1]);
+//        username = args[2];
+        InetAddress ip = InetAddress.getByName("localhost");
+        ServerPort = 1025;
+        username = "arlin";
 
 //         getting localhost ip
 //        InetAddress ip = InetAddress.getByName("localhost");
@@ -49,7 +49,7 @@ public class Client {
         ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
 
         //send a hello message to register username with client
-        Message hello = new Message(MessageType.SETNAME, username);
+        Message hello = new Message(MessageType.SETNAME, username.toLowerCase());
         oos.writeObject(hello);
         oos.reset();
         oos.flush();
@@ -90,13 +90,14 @@ public class Client {
                                 if (command.equalsIgnoreCase("activeUsers")) {
                                     System.out.println("Here are the active users: ");
 //
-//                                    if(activeUsers.isEmpty()) {
-//                                        System.out.println("no users");}
-//                                    else {
+                                    if(activeUsers.isEmpty()) {
+                                        System.out.println("You are alone in this server");}
+                                    else {
                                         for (String user : activeUsers) {
                                             System.out.println(user);
                                         }
-//                                    }
+                                    }
+
                                 }
 
                                 else if (command.equalsIgnoreCase("quit")) {
@@ -127,7 +128,7 @@ public class Client {
                                     sendingTo = command;
                                     newMsg = new Message(MessageType.SENDMESSAGE);
                                     newMsg.setSender(username);
-                                    newMsg.setRecipient(sendingTo);
+                                    newMsg.setRecipient(sendingTo.toLowerCase());
                                     newMsg.setMessage(tkmsg.nextToken());
 
                                     // set timeSent and write on the output stream
