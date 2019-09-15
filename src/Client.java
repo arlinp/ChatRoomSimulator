@@ -82,14 +82,14 @@ public class Client {
                                 System.out.println("You have logged out");
                             }
                             if (command.equalsIgnoreCase("login")) {
-                                loggedIn = false;
+                                loggedIn = true;
                                 newMsg = new Message(MessageType.LOGIN);
                                 System.out.println("You have logged in " + username);
                                 oos.writeObject(newMsg);
                                 oos.reset();
                                 oos.flush();
                             }
-                            if(loggedIn) {
+                            if(loggedIn && !command.equalsIgnoreCase("login")) {
                                 //view all active users
                                 if (command.equalsIgnoreCase("activeUsers")) {
                                     System.out.println("Here are the active users: ");
