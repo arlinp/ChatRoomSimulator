@@ -23,7 +23,7 @@ public class Client {
     private static boolean loggedIn = true;
 
     //Saved lists
-    private static transient ArrayList<String> activeUsers;
+    private static ArrayList<String> activeUsers;
     private static ArrayList<Message> savedMessages = new ArrayList<>();
 
     //Display aspects
@@ -89,12 +89,17 @@ public class Client {
                                 oos.reset();
                                 oos.flush();
                             }
-                            if(loggedIn && !command.equalsIgnoreCase("login")) {
+                            if(loggedIn){
                                 //view all active users
                                 if (command.equalsIgnoreCase("activeUsers")) {
                                     System.out.println("Here are the active users: ");
-                                    for (String user : activeUsers) {
-                                        System.out.println(user);
+
+                                    if(activeUsers.isEmpty()) {
+                                        System.out.println("no users");}
+                                    else {
+                                        for (String user : activeUsers) {
+                                            System.out.println(user);
+                                        }
                                     }
                                 }
 
@@ -119,7 +124,7 @@ public class Client {
                                     oos.flush();
                                     savedMessages.add(newMsg);
 
-                                } else {
+                                } else if(tkmsg.hasMoreTokens()){
                                     //create message object
                                     sendingTo = command;
                                     newMsg = new Message(MessageType.SENDMESSAGE);
@@ -136,6 +141,9 @@ public class Client {
                                     System.out.println("SENT: " + "@" + newMsg.getRecipient() + " " +
                                             newMsg.getMessage());
                                 }
+                                else {
+                                    System.out.println("Not an actual command. Try again");
+                                }
                             }
                         }
                     }
@@ -151,12 +159,14 @@ public class Client {
             @Override
             public void run() {
                 Date date;
+                Message msgReceived;
 
                 while (true) {
                     try {
                         // read the message sent to this client
                         // set time received stamp
-                        Message msgReceived = (Message)ois.readObject();
+                        msgReceived = (Message)ois.readObject();
+                        System.out.println(msgReceived.getType());
 
                         msgReceived.setTimeReceived(System.currentTimeMillis());
                         //savedMessages.add(msgReceived);
