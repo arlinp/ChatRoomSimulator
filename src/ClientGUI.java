@@ -57,14 +57,12 @@ public class ClientGUI extends Application implements Serializable{
 
         /**commenting out until I figure out a way separate this from output data stream**/
 
-        username = "Candid";
-
-//        ip = InetAddress.getByName(args[0]);
-        //       ServerPort = Integer.parseInt(args[1]);
-        //       username = args[2];
+        ip = InetAddress.getByName(args[0]);
+        ServerPort = Integer.parseInt(args[1]);
+        username = args[2];
 
 //         getting localhost ip
-        InetAddress ip = InetAddress.getByName("localhost");
+//        InetAddress ip = InetAddress.getByName("localhost");
 
         // establish the connection
         Socket s = new Socket(ip, ServerPort);
