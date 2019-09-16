@@ -40,8 +40,6 @@ JC = javac
 
 CLASSES = \
     ClientGUI.java\
-    ClientSender.java\
-    ClientReceiver.java\
     Client.java\
     Message.java\
     MessageType.java\
