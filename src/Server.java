@@ -4,6 +4,8 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // Server class 
 public class Server {
@@ -30,6 +32,8 @@ public class Server {
         }
         System.out.println("Port number = " + portNumber);
 
+        ExecutorService pool = Executors.newFixedThreadPool(100);
+
         try {
             // server is listening on entered port number
             ServerSocket ss = new ServerSocket(portNumber);
@@ -54,7 +58,8 @@ public class Server {
                 ClientHandler mtch = new ClientHandler(s, "Client" + i, dis, dos);
 
                 // Create a new Thread with this object.
-                Thread t = new Thread(mtch);
+                //Thread t = new Thread(mtch);
+                pool.execute(mtch);
 
                 System.out.println("Adding this client to active client list");
                 // add this client to active clients list
@@ -62,7 +67,7 @@ public class Server {
                 System.out.println("Added " + mtch.getName() + " to the active client list - " + ar.contains(mtch));
 
                 // start the thread.
-                t.start();
+                //t.start();
 
                 // increment i for new client.
                 // i is used for naming only, and can be replaced
