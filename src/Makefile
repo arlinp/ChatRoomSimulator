@@ -70,4 +70,4 @@ classes: $(CLASSES:.java=.class)
 # RM is a predefined macro in make (RM = rm -f)
 #
 
-clean: ; $(RM) *.class *.csv
+clean: ; $(RM) *.class *.csv *.log
