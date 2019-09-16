@@ -1,5 +1,10 @@
-// Java implementation of Server side 
-// It contains two classes : Server and ClientHandler 
+/**
+ * Java implementation of Server
+ * It contains two classes : Server and ClientHandler
+ *
+ * @author Reuben Fresquez
+ * @author Amber Sustaita
+ */
 
 import java.io.*;
 import java.util.*;
@@ -16,6 +21,7 @@ public class Server {
     // counter for clients
     private static int i = 0;
 
+    // List of usernames of clients
     public static transient ArrayList<String> userNames = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -52,6 +58,7 @@ public class Server {
                 // obtain input and output streams
                 InputStream dis = s.getInputStream();
                 OutputStream dos = s.getOutputStream();
+                dos.flush();
 
                 // Create a new handler object for handling this request.
                 System.out.println("Creating a new handler for this client...");
@@ -114,6 +121,7 @@ class ClientHandler implements Runnable {
         this.isloggedin = true;
     }
 
+    // Returns the name of this client
     public String getName() {
         return name;
     }
@@ -146,13 +154,12 @@ class ClientHandler implements Runnable {
                             setName(received.getSender());
                             Server.userNames.add(received.getSender());
                             System.out.println("Sending active users to all clients.");
-//                            for (ClientHandler mc : Server.ar) {
-//                                Message users = new Message(MessageType.ACTIVEUSERS, Server.userNames);
-//                                mc.dos.writeObject(users);
-//                                this.wait(10);
-//                                mc.dos.reset();
-//                                mc.dos.flush();
-//                            }
+                            for (ClientHandler mc : Server.ar) {
+                                Message users = new Message(MessageType.ACTIVEUSERS, Server.userNames);
+                                mc.dos.writeObject(users);
+                                mc.dos.reset();
+                                mc.dos.flush();
+                            }
                         } else {
                             this.dos.writeObject(new Message(MessageType.BASIC));
                             this.dos.reset();
