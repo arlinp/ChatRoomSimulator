@@ -1,5 +1,5 @@
 set -m
-for i in {1..50}
+for i in {1..500}
 do
-    (java Client "b146-35" "1025" "s${i}" <<< "r${i}#hi") &
+    (java Client "b146-33" "1025" "s${i}" <<< "r${i}#hi") &
 done
