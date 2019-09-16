@@ -1,9 +1,5 @@
 set -m
-i=0
-for x in {1..2}
+for (( i=1; i<=$1; i++ ))
 do
-    (java Client "b146-20" "1025" "s${i}") &
-done  <<EOD
-r${i=$(($i+1))}#hi
-quit
-EOD
+    (java Client "b146-35" "1025" "s${i}" <<< "r${i}#hi") &
+done
